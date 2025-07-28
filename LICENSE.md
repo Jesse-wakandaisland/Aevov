@@ -1,4 +1,4 @@
-Aevov Neurosymbolic Architecture Copyright (C) 2025 Your Name or Company Name
+Aevov Neurosymbolic Architecture Copyright (C) 2025 Wakanda's Islands DBA - WPWAkanda LLC
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
