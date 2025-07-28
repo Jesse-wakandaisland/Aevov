@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: aevov_wordpress
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress_password
+      WORDPRESS_DB_NAME: wordpress_db
+    volumes:
+      - ./wordpress:/var/www/html
+      - ../aevov-demo-system:/var/www/html/wp-content/plugins/aevov-demo-system
+      - ../bloom-pattern-recognition:/var/www/html/wp-content/plugins/bloom-pattern-recognition
+      - ../aps-tools:/var/www/html/wp-content/plugins/aps-tools
+      - ../aevov-onboarding-system:/var/www/html/wp-content/plugins/aevov-onboarding-system
+      - ../AevovPatternSyncProtocol:/var/www/html/wp-content/plugins/AevovPatternSyncProtocol
+      - ../aevov-diagnostic-network:/var/www/html/wp-content/plugins/aevov-diagnostic-network
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0
+    container_name: aevov_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: wordpress_db
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress_password
+    volumes:
+      - ./db_data:/var/lib/mysql
+
+  php-cli:
+    image: php:8.1-cli
+    container_name: aevov_php_cli
+    volumes:
+      - ./wordpress:/var/www/html
+      - ../aevov-demo-system:/var/www/html/wp-content/plugins/aevov-demo-system
+      - ../bloom-pattern-recognition:/var/www/html/wp-content/plugins/bloom-pattern-recognition
+      - ../aps-tools:/var/www/html/wp-content/plugins/aps-tools
+      - ../aevov-onboarding-system:/var/www/html/wp-content/plugins/aevov-onboarding-system
+      - ../AevovPatternSyncProtocol:/var/www/html/wp-content/plugins/AevovPatternSyncProtocol
+      - ../aevov-diagnostic-network:/var/www/html/wp-content/plugins/aevov-diagnostic-network
+      - .:/var/www/html/wp-content/plugins/aevov-testing-framework # Mount the entire testing framework directory
+    working_dir: /var/www/html/wp-content/plugins/aevov-testing-framework
+    depends_on:
+      - wordpress
+    command: "tail -f /dev/null" # Keep container running for manual commands

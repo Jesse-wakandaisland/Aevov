@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         processIsolation="false"
+         stopOnFailure="false">
+    <testsuites>
+        <testsuite name="Aevov Plugin Tests">
+            <directory suffix="Test.php">./tests</directory>
+        </testsuite>
+        <testsuite name="AevovIntegration">
+            <file>./tests/AevovIntegrationTest.php</file>
+            <file>./tests/AevovDemoSystemTest.php</file>
+            <file>./tests/ChunkWorkflowTest.php</file>
+        </testsuite>
+    </testsuites>
+    <php>
+        <const name="WP_TESTS_DIR" value="/var/www/html/wp-content/plugins/aevov-testing-framework/wordpress-tests-lib"/>
+    </php>
+</phpunit>

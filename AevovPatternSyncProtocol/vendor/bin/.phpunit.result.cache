@@ -1,0 +1,1 @@
+{"version":1,"defects":{"Tests\\Unit\\AevovPatternSyncProtocol\\Analysis\\PatternAnalyzerTest::testAnalyzePatternReturnsValidStructure":8,"Tests\\Unit\\AevovPatternSyncProtocol\\Analysis\\PatternAnalyzerTest::testExtractFeaturesReturnsValidComponents":8,"Tests\\Unit\\AevovPatternSyncProtocol\\Analysis\\PatternAnalyzerTest::testCalculateMetricsReturnsValidScores":8},"times":[]}
