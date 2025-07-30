@@ -31,7 +31,7 @@ The `BLOOM Pattern Recognition System` is the foundational engine that performs 
 3.  **Configuration**:
     *   After activation, a new menu item called "Pattern System" will appear in your WordPress admin sidebar.
     *   Navigate to "Pattern System" > "System Settings" to configure the plugins.
-    *   The settings page for the `BLOOM Pattern Recognition System` can be found in the Network Admin under "BLOROWSER Patterns".
+    *   The settings page for the `BLOOM Pattern Recognition System` can be found in the Network Admin under "BLOOM Patterns".
 
 ## Architecture
 
@@ -61,4 +61,8 @@ This project has the following dependencies:
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a pull request or open an issue on the GitHub repository.
+Contributions are welcome! Please feel free to submit a pull request or open an issue on the GitHub repository. For more detailed information, please see the [Developer Documentation](DEVELOPER_DOCS.md).
+
+## Known Issues
+
+*   **Testing Environment:** The unit tests are not currently running due to issues with the testing environment. This is a high-priority issue that needs to be resolved.

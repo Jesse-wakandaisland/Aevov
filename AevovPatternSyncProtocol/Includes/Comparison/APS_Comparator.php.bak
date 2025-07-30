@@ -5,25 +5,25 @@
 
 namespace APS\Comparison;
 
-use APS\Analysis\SymbolicPatternAnalyzer;
-use BLOOM\Processing\TensorProcessor;
-
 class APS_Comparator {
-    private $symbolic_analyzer;
-    private $tensor_processor;
+    private $pattern_engine;
+    private $tensor_engine;
+    private $hybrid_engine;
     private $rule_engine;
     private $filters;
     private $bloom_integration;
 
     public function __construct(
-        SymbolicPatternAnalyzer $symbolic_analyzer = null,
-        TensorProcessor $tensor_processor = null,
+        APS_Pattern_Engine $pattern_engine = null,
+        APS_Tensor_Engine $tensor_engine = null,
+        APS_Hybrid_Engine $hybrid_engine = null,
         APS_Rule_Engine $rule_engine = null,
         APS_Filters $filters = null,
         APS_BLOOM_Integration $bloom_integration = null
     ) {
-        $this->symbolic_analyzer = $symbolic_analyzer ?? new SymbolicPatternAnalyzer();
-        $this->tensor_processor = $tensor_processor ?? new TensorProcessor();
+        $this->pattern_engine = $pattern_engine;
+        $this->tensor_engine = $tensor_engine;
+        $this->hybrid_engine = $hybrid_engine;
         $this->rule_engine = $rule_engine;
         $this->filters = $filters;
         $this->bloom_integration = $bloom_integration;
@@ -82,43 +82,50 @@ class APS_Comparator {
         }
 
         switch ($engine_type) {
-            case 'symbolic':
-                return $this->symbolic_analyzer;
+            case 'pattern':
+                return $this->pattern_engine;
             case 'tensor':
-                return $this->tensor_processor;
+                return $this->tensor_engine;
+            case 'hybrid':
+                return $this->hybrid_engine;
             default:
                 throw new Exception("Unknown engine type: {$engine_type}");
         }
     }
 
     private function auto_select_engine($items) {
-        $has_symbolic = false;
-        $has_tensor = false;
+        $has_patterns = false;
+        $has_tensors = false;
 
         foreach ($items as $item) {
-            if ($this->is_symbolic_data($item)) {
-                $has_symbolic = true;
-            } elseif ($this->is_tensor_data($item)) {
-                $has_tensor = true;
+            if ($this->is_pattern_data($item)) {
+                $has_patterns = true;
+            } elseif ($this->is_tensor_data($item)) {  // Only check tensor if it's not a pattern
+                $has_tensors = true;
             }
         }
 
-        if ($has_symbolic && $has_tensor) {
-            // For hybrid comparison, we can default to the symbolic analyzer,
-            // which can call the tensor processor as needed.
-            return $this->symbolic_analyzer;
-        } elseif ($has_symbolic) {
-            return $this->symbolic_analyzer;
+        if ($has_tensors && $has_patterns) {
+            return $this->hybrid_engine;
+        } elseif ($has_patterns) {
+            return $this->pattern_engine;
         }
-        return $this->tensor_processor;
+        return $this->tensor_engine;
     }
 
     private function is_tensor_data($item) {
-        return isset($item['values']) && is_array($item['values']);
+        return isset($item['sequence'], $item['attention_mask'], $item['position_ids']) &&
+               is_array($item['sequence']) &&
+               is_array($item['attention_mask']) &&
+               is_array($item['position_ids']);
     }
 
-    private function is_symbolic_.phpdata($item) {
-        return isset($item['features']) && isset($item['symbols']);
+    private function is_pattern_data($item) {
+        return isset($item['chunk_id'], $item['chunk_size'], $item['overlap']) &&
+               is_numeric($item['chunk_id']) &&
+               is_numeric($item['chunk_size']) &&
+               is_numeric($item['overlap']) &&
+               $this->is_tensor_data($item);  // Now, this dependency is still valid but more structured
     }
 
     public function store_comparison_result($result) {

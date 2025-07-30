@@ -17,31 +17,31 @@ class TensorProcessor {
     private $validator;
     private $batch_size = 100;
     private $chunk_size = 7 * 1024 * 1024; // 7MB chunks
-    
+
     public function __construct() {
         $this->tensor_model = new TensorModel();
         $this->chunk_model = new ChunkModel();
         $this->pattern_model = new PatternModel();
-        
+
         // Conditional instantiation for dependencies
         if (class_exists('BLOOM\Utilities\DataValidator')) {
             $this->validator = new DataValidator();
         }
-        
+
         $this->chunk_processor = new ChunkProcessor();
     }
-    
+
     public function process_tensor($tensor_data) {
         try {
             // Validate tensor data
             $this->validate_tensor($tensor_data);
-            
+
             // Pre-process tensor data
             $preprocessed_data = $this->tensor_model->preprocess($tensor_data);
 
             // Split into chunks
             $chunks = $this->chunk_processor->split_tensor($preprocessed_data);
-            
+
             // Process chunks in batches to improve performance
             $processed_chunks = [];
             foreach (array_chunk($chunks, $this->batch_size) as $batch) {
@@ -62,10 +62,10 @@ class TensorProcessor {
                 }
             }
             $final_results['patterns'] = $all_patterns;
-            
+
             // Store results
             return $this->store_processed_tensor($final_results);
-            
+
         } catch (\Exception $e) {
             $this->handle_processing_error($e);
             throw $e;
@@ -79,19 +79,19 @@ class TensorProcessor {
             if ($validator) {
                 $validator->validate_pattern_data($pattern_data);
             }
-            
+
             // Extract features from pattern
             $features = $this->extract_features($pattern_data);
-            
+
             // Calculate confidence score
             $confidence = $this->calculate_confidence($pattern_data, $features);
-            
+
             // Find similar patterns
             $similar_patterns = $this->pattern_model->find_similar([
                 'type' => $pattern_data['type'],
                 'features' => $features
             ], 0.75);
-            
+
             $result = [
                 'pattern_hash' => hash('sha256', json_encode($features)),
                 'type' => $pattern_data['type'],
@@ -103,9 +103,9 @@ class TensorProcessor {
                     ['processed_at' => time()]
                 )
             ];
-            
+
             return $result;
-            
+
         } catch (\Exception $e) {
             $this->handle_processing_error($e);
             throw $e;
@@ -122,7 +122,7 @@ class TensorProcessor {
 
     public function process_patterns($tensor_data_array) {
         $results = [];
-        
+
         foreach ($tensor_data_array as $tensor_data) {
             try {
                 $result = $this->process_tensor($tensor_data);
@@ -134,7 +134,7 @@ class TensorProcessor {
                 $this->handle_processing_error($e);
             }
         }
-        
+
         return $results;
     }
 
@@ -143,11 +143,11 @@ class TensorProcessor {
         if ($validator) {
             return $validator->validate_tensor_data($tensor_data);
         }
-        
+
         // Basic validation fallback
         return is_array($tensor_data) && isset($tensor_data['values']);
     }
-    
+
     private function get_validator() {
         if (!$this->validator && class_exists('BLOOM\Utilities\DataValidator')) {
             $this->validator = new DataValidator();
@@ -157,7 +157,7 @@ class TensorProcessor {
 
     private function process_chunk_batch($batch) {
         $results = [];
-        
+
         foreach ($batch as $chunk) {
             try {
                 $processed_chunk = $this->process_single_chunk($chunk);
@@ -168,53 +168,77 @@ class TensorProcessor {
                 $this->handle_processing_error($e);
             }
         }
-        
+
         return $results;
     }
 
     private function process_single_chunk($chunk) {
+        // Extract features from chunk data
+        $features = $this->extract_features_from_chunk($chunk);
+
         // Extract patterns from chunk data
         $patterns = $this->extract_patterns_from_chunk($chunk);
-        
+
         return [
             'chunk_id' => $chunk['id'] ?? uniqid(),
+            'features' => $features,
             'patterns' => $patterns,
             'values' => $chunk['values'] ?? [],
             'metadata' => $chunk['metadata'] ?? []
         ];
     }
 
+    private function extract_features_from_chunk($chunk) {
+        $features = [];
+
+        if (!isset($chunk['values']) || !is_array($chunk['values'])) {
+            return $features;
+        }
+
+        $values = $chunk['values'];
+        $count = count($values);
+
+        if ($count > 0) {
+            $features['mean'] = array_sum($values) / $count;
+            $features['max'] = max($values);
+            $features['min'] = min($values);
+            $features['variance'] = $this->calculate_variance($values, $features['mean']);
+        }
+
+        return $features;
+    }
+
     private function extract_patterns_from_chunk($chunk) {
         $patterns = [];
-        
+
         if (!isset($chunk['values']) || !is_array($chunk['values'])) {
             return $patterns;
         }
-        
+
         // Sequential pattern detection
         $sequential = $this->detect_sequential_patterns($chunk['values']);
         if (!empty($sequential)) {
             $patterns['sequential'] = $sequential;
         }
-        
+
         // Statistical pattern detection
         $statistical = $this->detect_statistical_patterns($chunk['values']);
         if (!empty($statistical)) {
             $patterns['statistical'] = $statistical;
         }
-        
+
         return $patterns;
     }
 
     private function detect_sequential_patterns($values) {
         $patterns = [];
         $sequence_length = min(10, count($values)); // Look for sequences up to 10 elements
-        
+
         for ($len = 3; $len <= $sequence_length; $len++) {
             for ($i = 0; $i <= count($values) - $len; $i++) {
                 $sequence = array_slice($values, $i, $len);
                 $pattern_strength = $this->calculate_sequence_strength($sequence);
-                
+
                 if ($pattern_strength > 0.7) {
                     $patterns[] = [
                         'type' => 'sequence',
@@ -225,21 +249,21 @@ class TensorProcessor {
                 }
             }
         }
-        
+
         return $patterns;
     }
 
     private function detect_statistical_patterns($values) {
         $patterns = [];
-        
+
         if (count($values) < 3) {
             return $patterns;
         }
-        
+
         $mean = array_sum($values) / count($values);
         $variance = $this->calculate_variance($values, $mean);
         $std_dev = sqrt($variance);
-        
+
         // Detect outliers
         $outliers = [];
         foreach ($values as $i => $value) {
@@ -247,7 +271,7 @@ class TensorProcessor {
                 $outliers[] = ['index' => $i, 'value' => $value];
             }
         }
-        
+
         if (!empty($outliers)) {
             $patterns[] = [
                 'type' => 'outliers',
@@ -256,7 +280,7 @@ class TensorProcessor {
                 'std_dev' => $std_dev
             ];
         }
-        
+
         return $patterns;
     }
 
@@ -264,12 +288,12 @@ class TensorProcessor {
         if (count($sequence) < 3) {
             return 0;
         }
-        
+
         $differences = [];
         for ($i = 1; $i < count($sequence); $i++) {
             $differences[] = $sequence[$i] - $sequence[$i-1];
         }
-        
+
         // Check for arithmetic progression
         $first_diff = $differences[0];
         $is_arithmetic = true;
@@ -279,7 +303,7 @@ class TensorProcessor {
                 break;
             }
         }
-        
+
         return $is_arithmetic ? 1.0 : 0.0;
     }
 
@@ -293,27 +317,27 @@ class TensorProcessor {
 
     private function extract_features($pattern_data) {
         $features = [];
-        
+
         if (isset($pattern_data['tensor_data'])) {
             $tensor_features = $this->extract_tensor_features($pattern_data['tensor_data']);
             $features = array_merge($features, $tensor_features);
         }
-        
+
         if (isset($pattern_data['features'])) {
             $features = array_merge($features, $pattern_data['features']);
         }
-        
+
         return $features;
     }
 
     private function extract_tensor_features($tensor_data) {
         $features = [];
-        
+
         if (isset($tensor_data['data'])) {
             $data = is_string($tensor_data['data']) ?
                    json_decode($tensor_data['data'], true) :
                    $tensor_data['data'];
-            
+
             if (is_array($data)) {
                 $features['mean'] = array_sum($data) / count($data);
                 $features['max'] = max($data);
@@ -321,43 +345,43 @@ class TensorProcessor {
                 $features['variance'] = $this->calculate_variance($data, $features['mean']);
             }
         }
-        
+
         if (isset($tensor_data['shape'])) {
             $features['shape'] = $tensor_data['shape'];
         }
-        
+
         if (isset($tensor_data['dtype'])) {
             $features['dtype'] = $tensor_data['dtype'];
         }
-        
+
         return $features;
     }
 
     private function calculate_confidence($pattern_data, $features) {
         $base_confidence = 0.5;
-        
+
         // Increase confidence based on feature completeness
         if (!empty($features)) {
             $base_confidence += 0.2;
         }
-        
+
         // Increase confidence if tensor data is present
         if (isset($pattern_data['tensor_data'])) {
             $base_confidence += 0.2;
         }
-        
+
         // Increase confidence based on pattern type
         if (isset($pattern_data['type'])) {
             $base_confidence += 0.1;
         }
-        
+
         return min(1.0, $base_confidence);
     }
 
     private function store_processed_tensor($tensor_results) {
         try {
             $tensor_sku = $this->tensor_model->create($tensor_results);
-            
+
             if ($tensor_sku) {
                 // Store any patterns found
                 if (isset($tensor_results['patterns']) && is_array($tensor_results['patterns'])) {
@@ -374,16 +398,16 @@ class TensorProcessor {
                         $this->pattern_model->create($pattern_to_store);
                     }
                 }
-                
+
                 return [
                     'tensor_sku' => $tensor_sku,
                     'status' => 'processed',
                     'patterns_found' => count($tensor_results['patterns'] ?? [])
                 ];
             }
-            
+
             return false;
-            
+
         } catch (\Exception $e) {
             $this->handle_processing_error($e);
             return false;
@@ -408,26 +432,26 @@ class TensorProcessor {
  */
 class ChunkProcessor {
     private $chunk_size;
-    
+
     public function __construct($chunk_size = null) {
         $this->chunk_size = $chunk_size ?? (7 * 1024 * 1024); // 7MB default
     }
-    
+
     public function split_tensor($tensor_data) {
         $chunks = [];
-        
+
         if (!isset($tensor_data['values']) || !is_array($tensor_data['values'])) {
             throw new \InvalidArgumentException('Tensor data must contain values array');
         }
-        
+
         $values = $tensor_data['values'];
         $total_size = count($values);
         $chunk_count = ceil($total_size / $this->chunk_size);
-        
+
         for ($i = 0; $i < $chunk_count; $i++) {
             $start = $i * $this->chunk_size;
             $chunk_values = array_slice($values, $start, $this->chunk_size);
-            
+
             $chunks[] = [
                 'id' => uniqid('chunk_'),
                 'index' => $i,
@@ -442,7 +466,7 @@ class ChunkProcessor {
                 )
             ];
         }
-        
+
         return $chunks;
     }
 }

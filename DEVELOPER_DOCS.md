@@ -16,7 +16,7 @@ The system is comprised of three distinct but interconnected plugins:
     *   **Key Components:**
         *   `BLOOM\Core\Bloom`: Main plugin class.
         *   `BLOOM\Models\*`: Data models for patterns, chunks, and tensors.
-        *   `BLOOM\Processing\TensorProcessor`: Placeholder for the core tensor processing logic.
+        *   `BLOOM\Processing\TensorProcessor`: Processes tensor chunks and extracts features and patterns.
         *   `BLOOM\Network\NetworkManager`: Manages communication between sites in the multisite network.
 
 *   **`Aevov Pattern Sync Protocol` (The Conductor):**
@@ -24,7 +24,8 @@ The system is comprised of three distinct but interconnected plugins:
     *   **Technology:** WordPress plugin that acts as a bridge between the UI and the BLOOM engine.
     *   **Key Components:**
         *   `APS\Analysis\APS_Plugin`: The main plugin class, which checks for BLOOM dependencies.
-        *   `APS\Comparison\APS_Comparator`: Intended to handle the comparison of different patterns.
+        *   `APS\Analysis\SymbolicPatternAnalyzer`: Analyzes and compares symbolic patterns.
+        *   `APS\Comparison\APS_Comparator`: Intended to handle the comparison of different patterns, using the `SymbolicPatternAnalyzer` and `TensorProcessor`.
         *   `APS\Integration\BloomIntegration`: Manages the communication with the BLOOM plugin.
 
 *   **`APS Tools` (The Cockpit):**
@@ -53,14 +54,14 @@ The system is comprised of three distinct but interconnected plugins:
 
 The following roadmap outlines the key areas for future development to bring the project to a production-ready state.
 
-**Phase 1: Core Algorithm Implementation (Current Focus)**
+**Phase 1: Core Algorithm Implementation (In Progress)**
 
 *   **Tensor Processor Refinement:**
-    *   **Status:** Scaffolding in place.
-    *   **Next Steps:** Implement the core algorithms within `BLOOM\Processing\TensorProcessor` for analyzing tensor chunks. This is the highest priority.
+    *   **Status:** Implemented.
+    *   **Next Steps:** Refine and optimize the feature extraction and pattern detection algorithms in `BLOOM\Processing\TensorProcessor`.
 *   **Pattern Comparison Engine:**
-    *   **Status:** Basic structure exists.
-    *   **Next Steps:** Enhance `APS\Comparison\APS_Comparator` to provide meaningful and accurate comparisons between different patterns.
+    *   **Status:** Implemented.
+    *   **Next Steps:** Refine and optimize the comparison algorithms in `APS\Comparison\APS_Comparator` and `APS\Analysis\SymbolicPatternAnalyzer`.
 
 **Phase 2: User Experience and Interface**
 
@@ -74,8 +75,8 @@ The following roadmap outlines the key areas for future development to bring the
 **Phase 3: Testing and Hardening**
 
 *   **Unit and Integration Testing:**
-    *   **Status:** Not started.
-    *   **Next Steps:** Develop a comprehensive suite of unit and integration tests for all three plugins. This is critical for ensuring the stability and reliability of the system.
+    *   **Status:** In progress.
+    *   **Next Steps:** Resolve the issues with the testing environment and develop a comprehensive suite of unit and integration tests for all three plugins. This is critical for ensuring the stability and reliability of the system.
 *   **Performance and Scalability Testing:**
     *   **Status:** Not started.
     *   **Next Steps:** Conduct rigorous performance testing to identify and address bottlenecks, ensuring the system can handle large-scale data processing.
@@ -92,3 +93,7 @@ The following roadmap outlines the key areas for future development to bring the
 ### 5. How to Contribute
 
 We welcome contributions from the community. Please refer to the `README.md` for general contribution guidelines. For developers, we recommend starting with the "Phase 3: Testing and Hardening" tasks, as this is a critical area where the community can provide immediate value.
+
+### 6. Known Issues
+
+*   **Testing Environment:** The unit tests are not currently running due to issues with the testing environment. This is a high-priority issue that needs to be resolved.

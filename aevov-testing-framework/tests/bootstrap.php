@@ -7,12 +7,12 @@
 
 // Define the path to PHPUnit Polyfills
 if ( ! defined( 'WP_TESTS_PHPUNIT_POLYFILLS_PATH' ) ) {
-    define( 'WP_TESTS_PHPUNIT_POLYFILLS_PATH', '/root/.composer/vendor/yoast/phpunit-polyfills' );
+    define( 'WP_TESTS_PHPUNIT_POLYFILLS_PATH', __DIR__ . '/../vendor/yoast/phpunit-polyfills' );
 }
 
 // Define WP_TESTS_DIR if not already defined (e.g., by phpunit.xml)
 if ( ! defined( 'WP_TESTS_DIR' ) ) {
-    define( 'WP_TESTS_DIR', '/var/www/html/wp-content/plugins/aevov-testing-framework/wordpress-tests-lib' );
+    define( 'WP_TESTS_DIR', __DIR__ . '/../wordpress-tests-lib' );
 }
 
 // Define the path to wp-tests-config.php

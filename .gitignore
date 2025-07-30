@@ -13,4 +13,6 @@ db_data/wordpress_db/sys/
 # You might also want to ignore other sensitive config files that contain passwords/APIs
 # Examples (adjust based on your actual framework structure):
 config/database.php # Or similar file containing DB credentials
-.env 
+.env
+
+AevovPatternSyncProtocol/vendor/
