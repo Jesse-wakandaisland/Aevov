@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   wordpress:
-    image: wordpress:latest
+    image: wordpress:php8.1-fpm-alpine
     container_name: aevov_wordpress
     ports:
       - "8080:80"
