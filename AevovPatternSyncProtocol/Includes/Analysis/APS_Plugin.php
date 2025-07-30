@@ -161,9 +161,15 @@ final class APS_Plugin {
         require_once APS_PATH . 'Includes/Pattern/PatternValidator.php';
         require_once APS_PATH . 'Includes/Comparison/APS_Comparator.php';
         require_once APS_PATH . 'Includes/Integration/BloomIntegration.php';
+        require_once APS_PATH . 'Includes/Features/PatternOfTheDay.php';
+        require_once APS_PATH . 'Includes/Features/FeaturedPattern.php';
+        require_once APS_PATH . 'Includes/Features/PatternSpotlight.php';
     }
 
     private $poc;
+    private $pattern_of_the_day;
+    private $featured_pattern;
+    private $pattern_spotlight;
 
     private function init_components() {
         if ($this->loader === null) {
@@ -175,6 +181,9 @@ final class APS_Plugin {
         }
 
         $this->poc = new \Aevov\Decentralized\ProofOfContribution();
+        $this->pattern_of_the_day = new \Aevov\Features\PatternOfTheDay(new \APS\DB\APS_Pattern_DB());
+        $this->featured_pattern = new \Aevov\Features\FeaturedPattern();
+        $this->pattern_spotlight = new \Aevov\Features\PatternSpotlight();
     }
 
     public function submit_contribution($data)
