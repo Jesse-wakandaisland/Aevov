@@ -63,6 +63,16 @@ class APS_Admin {
                 'aps-pattern-sync-tools',
                 [$this, 'render_tools']
             );
+
+            // Add Proof of Contribution submenu to APS Tools
+            add_submenu_page(
+                'aps-dashboard', // Parent slug from APS Tools
+                __('Proof of Contribution', 'aps'),
+                __('Proof of Contribution', 'aps'),
+                'manage_options',
+                'aps-poc',
+                [$this, 'render_poc']
+            );
         }
     }
 
@@ -118,6 +128,22 @@ class APS_Admin {
                     'confirm' => function_exists('__') ? __('Are you sure?', 'aps') : 'Are you sure?'
                 ]
             ]);
+        }
+
+        if ($hook === 'aps-tools_page_aps-poc') {
+            wp_enqueue_style(
+                'poc-interface',
+                APS_URL . 'aps-tools/react-app/poc-interface/build/static/css/main.css',
+                [],
+                '1.0.0'
+            );
+            wp_enqueue_script(
+                'poc-interface',
+                APS_URL . 'aps-tools/react-app/poc-interface/build/static/js/main.js',
+                [],
+                '1.0.0',
+                true
+            );
         }
     }
 

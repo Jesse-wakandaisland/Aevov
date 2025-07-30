@@ -166,7 +166,12 @@ class DistributedLedger
 
         // Grab and verify the chains from all the nodes in our network
         foreach ($neighbours as $node) {
-            $response = file_get_contents("http://{$node}/chain");
+            try {
+                $response = file_get_contents("http://{$node}/chain");
+            } catch (\Exception $e) {
+                // Ignore nodes that are not reachable.
+                continue;
+            }
 
             if ($response) {
                 $length = json_decode($response, true)['length'];

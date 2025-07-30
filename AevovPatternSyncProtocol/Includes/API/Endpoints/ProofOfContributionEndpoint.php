@@ -32,7 +32,7 @@ class ProofOfContributionEndpoint extends \WP_REST_Controller
             [
                 'methods' => \WP_REST_Server::READABLE,
                 'callback' => [$this, 'mine'],
-                'permission_callback' => '__return_true',
+                'permission_callback' => [$this, 'check_permission'],
             ],
         ]);
 
@@ -40,7 +40,7 @@ class ProofOfContributionEndpoint extends \WP_REST_Controller
             [
                 'methods' => \WP_REST_Server::READABLE,
                 'callback' => [$this, 'chain'],
-                'permission_callback' => '__return_true',
+                'permission_callback' => [$this, 'check_permission'],
             ],
         ]);
 
@@ -48,7 +48,7 @@ class ProofOfContributionEndpoint extends \WP_REST_Controller
             [
                 'methods' => \WP_REST_Server::CREATABLE,
                 'callback' => [$this, 'register_nodes'],
-                'permission_callback' => '__return_true',
+                'permission_callback' => [$this, 'check_permission'],
             ],
         ]);
 
@@ -56,7 +56,7 @@ class ProofOfContributionEndpoint extends \WP_REST_Controller
             [
                 'methods' => \WP_REST_Server::READABLE,
                 'callback' => [$this, 'resolve_nodes'],
-                'permission_callback' => '__return_true',
+                'permission_callback' => [$this, 'check_permission'],
             ],
         ]);
     }
@@ -98,7 +98,7 @@ class ProofOfContributionEndpoint extends \WP_REST_Controller
     {
         $nodes = $request->get_param('nodes');
 
-        if (empty($nodes)) {
+        if (!is_array($nodes)) {
             return new \WP_REST_Response(['message' => 'Error: Please supply a valid list of nodes'], 400);
         }
 
@@ -166,5 +166,15 @@ class ProofOfContributionEndpoint extends \WP_REST_Controller
         ];
 
         return new \WP_REST_Response($response, 200);
+    }
+
+    /**
+     * Checks if the user has permission to access the endpoint.
+     *
+     * @return bool
+     */
+    public function check_permission()
+    {
+        return current_user_can('manage_options');
     }
 }
