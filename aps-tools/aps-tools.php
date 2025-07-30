@@ -722,36 +722,77 @@ private function store_chunk($chunk_data) {
     }
 
     private function get_knowledge_graph_data() {
-        // This is a placeholder for a more sophisticated knowledge graph implementation
-        return [
-            'nodes' => [
-                ['id' => 1, 'label' => 'Pattern A'],
-                ['id' => 2, 'label' => 'Pattern B'],
-                ['id' => 3, 'label' => 'Pattern C'],
-            ],
-            'edges' => [
-                ['from' => 1, 'to' => 2],
-                ['from' => 1, 'to' => 3],
-            ],
-        ];
+        global $wpdb;
+        $nodes = [];
+        $edges = [];
+
+        $patterns = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}aps_patterns");
+        foreach ($patterns as $pattern) {
+            $nodes[] = [
+                'id' => 'pattern-' . $pattern->id,
+                'data' => ['label' => $pattern->pattern_type],
+                'position' => ['x' => rand(0, 500), 'y' => rand(0, 500)],
+            ];
+        }
+
+        $chunks = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}aps_pattern_chunks");
+        foreach ($chunks as $chunk) {
+            $nodes[] = [
+                'id' => 'chunk-' . $chunk->chunk_id,
+                'data' => ['label' => 'Chunk ' . $chunk->chunk_id],
+                'position' => ['x' => rand(0, 500), 'y' => rand(0, 500)],
+            ];
+            $edges[] = [
+                'id' => 'edge-' . $chunk->pattern_id . '-' . $chunk->chunk_id,
+                'source' => 'pattern-' . $chunk->pattern_id,
+                'target' => 'chunk-' . $chunk->chunk_id,
+            ];
+        }
+
+        return ['nodes' => $nodes, 'edges' => $edges];
     }
 
     private function get_scatter_plot_data() {
-        // This is a placeholder for a more sophisticated scatter plot implementation
-        return [
-            ['x' => 10, 'y' => 20],
-            ['x' => 20, 'y' => 30],
-            ['x' => 30, 'y' => 40],
-        ];
+        global $wpdb;
+        $results = $wpdb->get_results(
+            "SELECT p1.id as p1_id, p2.id as p2_id, c.similarity_score
+            FROM {$wpdb->prefix}aps_comparisons c
+            JOIN {$wpdb->prefix}aps_patterns p1 ON c.pattern1_id = p1.id
+            JOIN {$wpdb->prefix}aps_patterns p2 ON c.pattern2_id = p2.id
+            ORDER BY c.created_at DESC
+            LIMIT 100"
+        );
+
+        $data = [];
+        foreach ($results as $result) {
+            $data[] = [
+                'x' => $result->p1_id,
+                'y' => $result->p2_id,
+                'r' => $result->similarity_score * 10,
+            ];
+        }
+
+        return $data;
     }
 
     private function get_heat_map_data() {
-        // This is a placeholder for a more sophisticated heat map implementation
-        return [
-            [1, 2, 3],
-            [4, 5, 6],
-            [7, 8, 9],
-        ];
+        global $wpdb;
+        $results = $wpdb->get_results(
+            "SELECT DAYOFWEEK(created_at) as day, WEEK(created_at) as week, COUNT(*) as count
+            FROM {$wpdb->prefix}aps_patterns
+            GROUP BY day, week"
+        );
+
+        $data = [];
+        foreach ($results as $result) {
+            $data[] = [
+                'x' => $result->day,
+                'y' => $result->week,
+                'v' => $result->count,
+            ];
+        }
+
+        return $data;
     }
 
     public function search($request) {

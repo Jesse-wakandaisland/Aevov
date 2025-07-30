@@ -16,3 +16,4 @@ config/database.php # Or similar file containing DB credentials
 .env
 
 AevovPatternSyncProtocol/vendor/
+node_modules/

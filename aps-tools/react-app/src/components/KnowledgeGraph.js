@@ -1,11 +1,23 @@
 import React from 'react';
+import ReactFlow, {
+    Elements,
+    Handle,
+    Position,
+    ReactFlowProvider,
+  } from 'react-flow-renderer';
 
 function KnowledgeGraph({ data }) {
-    // This is a placeholder for a more sophisticated knowledge graph visualization
+    const elements = [
+        ...data.nodes.map((node) => ({ ...node, type: 'default' })),
+        ...data.edges,
+    ];
+
     return (
-        <div>
+        <div style={{ height: 500 }}>
             <h2>Knowledge Graph</h2>
-            <pre>{JSON.stringify(data, null, 2)}</pre>
+            <ReactFlowProvider>
+                <ReactFlow elements={elements} />
+            </ReactFlowProvider>
         </div>
     );
 }
