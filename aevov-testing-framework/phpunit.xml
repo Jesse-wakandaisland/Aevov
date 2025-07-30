@@ -19,6 +19,6 @@
         </testsuite>
     </testsuites>
     <php>
-        <const name="WP_TESTS_DIR" value="/var/www/html/wp-content/plugins/aevov-testing-framework/wordpress-tests-lib"/>
+        <const name="WP_TESTS_DIR" value="/app/aevov-testing-framework/wordpress-tests-lib"/>
     </php>
 </phpunit>
