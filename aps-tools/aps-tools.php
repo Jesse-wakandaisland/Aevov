@@ -185,6 +185,25 @@ class APSTools {
             'aps-bloom',
             [$this, 'render_bloom']
         );
+
+        add_menu_page(
+            'Aevov Unified Dashboard',
+            'Aevov Dashboard',
+            'manage_options',
+            'aevov-dashboard',
+            [$this, 'render_unified_dashboard'],
+            'dashicons-dashboard',
+            2
+        );
+
+        add_submenu_page(
+            'aevov-dashboard',
+            'Visualizations',
+            'Visualizations',
+            'manage_options',
+            'aevov-visualizations',
+            [$this, 'render_visualizations']
+        );
     }
 
 public function render_chunk_import_page() {
@@ -395,6 +414,14 @@ public function enqueue_assets($hook) {
                 return current_user_can('manage_options');
             }
         ]);
+
+        register_rest_route('aps-tools/v1', '/dashboard', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_dashboard_data'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
     }
 public function handle_chunk_upload($request) {
     $chunk_data = $request->get_json_params();
@@ -462,6 +489,14 @@ private function store_chunk($chunk_data) {
 
     public function render_bloom() {
         include APSTOOLS_PATH . 'templates/bloom.php';
+    }
+
+    public function render_unified_dashboard() {
+        include APSTOOLS_PATH . 'templates/unified-dashboard.php';
+    }
+
+    public function render_visualizations() {
+        include APSTOOLS_PATH . 'templates/visualizations.php';
     }
 
     public function get_system_status() {
@@ -576,6 +611,43 @@ private function store_chunk($chunk_data) {
         );
     }
 
+    private function get_pattern_type_distribution() {
+        global $wpdb;
+        $results = $wpdb->get_results(
+            "SELECT pattern_type, COUNT(*) as count FROM {$wpdb->prefix}aps_patterns GROUP BY pattern_type",
+            ARRAY_A
+        );
+
+        $distribution = [];
+        foreach ($results as $result) {
+            $distribution[$result['pattern_type']] = $result['count'];
+        }
+
+        return $distribution;
+    }
+
+    private function get_recent_patterns() {
+        global $wpdb;
+        return $wpdb->get_results(
+            "SELECT id, pattern_type, confidence, created_at FROM {$wpdb->prefix}aps_patterns ORDER BY created_at DESC LIMIT 10"
+        );
+    }
+
+    public function get_dashboard_data() {
+        return rest_ensure_response([
+            'total_patterns' => $this->get_pattern_count(),
+            'patterns_today' => $this->get_patterns_processed_today(),
+            'system_health' => 'OK', // This is a placeholder
+        ]);
+    }
+
+    private function get_patterns_processed_today() {
+        global $wpdb;
+        return $wpdb->get_var(
+            "SELECT COUNT(*) FROM {$wpdb->prefix}aps_patterns WHERE DATE(created_at) = CURDATE()"
+        );
+    }
+
     private function get_bloom_status() {
         if (!class_exists('\BLOOM\Integration\APSIntegration')) {
             return 'inactive';
@@ -675,6 +747,8 @@ public function handle_get_system_metrics() {
             'statistical' => $this->get_pattern_count_by_type('statistical'),
         ],
         'avg_confidence' => $this->get_average_confidence(),
+        'pattern_types' => $this->get_pattern_type_distribution(),
+        'recent_patterns' => $this->get_recent_patterns(),
     ]);
 }
     

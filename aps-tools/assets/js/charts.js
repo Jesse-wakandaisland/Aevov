@@ -65,6 +65,38 @@
             });
         }
 
+        // Pattern Type Chart
+        var patternTypeCtx = document.getElementById('pattern-type-chart');
+        if (patternTypeCtx) {
+            var patternTypeChart = new Chart(patternTypeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Pattern Types',
+                        data: [],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                }
+            });
+        }
+
         // Function to update the charts with new data
         function updateCharts() {
             // Fetch new data from the server
@@ -97,11 +129,37 @@
                             patternMetricsChart.update();
                         }
 
+                        // Update Pattern Type Chart
+                        if (patternTypeChart) {
+                            patternTypeChart.data.labels = Object.keys(data.pattern_types);
+                            patternTypeChart.data.datasets[0].data = Object.values(data.pattern_types);
+                            patternTypeChart.update();
+                        }
+
                         // Update summary metrics
                         $('#cpu-usage').text(data.cpu_usage + '%');
                         $('#memory-usage').text(data.memory_usage + '%');
                         $('#patterns-processed').text(data.patterns_processed.total);
                         $('#avg-confidence').text(data.avg_confidence + '%');
+
+                        // Update recent patterns table
+                        var recentPatternsTable = $('#recent-patterns-table');
+                        if (recentPatternsTable.length) {
+                            recentPatternsTable.empty();
+                            if (data.recent_patterns.length) {
+                                $.each(data.recent_patterns, function(index, pattern) {
+                                    var row = '<tr>';
+                                    row += '<td>' + pattern.id + '</td>';
+                                    row += '<td>' + pattern.pattern_type + '</td>';
+                                    row += '<td>' + pattern.confidence + '</td>';
+                                    row += '<td>' + pattern.created_at + '</td>';
+                                    row += '</tr>';
+                                    recentPatternsTable.append(row);
+                                });
+                            } else {
+                                recentPatternsTable.append('<tr><td colspan="4">' + apsTools.i18n.noRecentPatterns + '</td></tr>');
+                            }
+                        }
                     }
                 }
             });
