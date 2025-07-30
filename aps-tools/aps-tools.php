@@ -231,6 +231,14 @@ public function enqueue_assets($hook) {
         APSTOOLS_VERSION,
         true
     );
+
+    // Unified Dashboard
+    wp_enqueue_style(
+        'apstools-unified-dashboard',
+        APSTOOLS_URL . 'assets/css/unified-dashboard.css',
+        [],
+        APSTOOLS_VERSION
+    );
     
     wp_enqueue_script(
     'aps-directory-scanner',
@@ -418,6 +426,22 @@ public function enqueue_assets($hook) {
         register_rest_route('aps-tools/v1', '/dashboard', [
             'methods' => 'GET',
             'callback' => [$this, 'get_dashboard_data'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
+
+        register_rest_route('aps-tools/v1', '/activity-feed', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_activity_feed'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
+
+        register_rest_route('aps-tools/v1', '/visualizations', [
+            'methods' => 'GET',
+            'callback' => [$this, 'get_visualizations_data'],
             'permission_callback' => function() {
                 return current_user_can('manage_options');
             }
@@ -646,6 +670,56 @@ private function store_chunk($chunk_data) {
         return $wpdb->get_var(
             "SELECT COUNT(*) FROM {$wpdb->prefix}aps_patterns WHERE DATE(created_at) = CURDATE()"
         );
+    }
+
+    public function get_activity_feed() {
+        global $wpdb;
+        $results = $wpdb->get_results(
+            "SELECT * FROM {$wpdb->prefix}aps_sync_log ORDER BY created_at DESC LIMIT 20"
+        );
+
+        return rest_ensure_response($results);
+    }
+
+    public function get_visualizations_data() {
+        return rest_ensure_response([
+            'knowledge_graph' => $this->get_knowledge_graph_data(),
+            'scatter_plot' => $this->get_scatter_plot_data(),
+            'heat_map' => $this->get_heat_map_data(),
+        ]);
+    }
+
+    private function get_knowledge_graph_data() {
+        // This is a placeholder for a more sophisticated knowledge graph implementation
+        return [
+            'nodes' => [
+                ['id' => 1, 'label' => 'Pattern A'],
+                ['id' => 2, 'label' => 'Pattern B'],
+                ['id' => 3, 'label' => 'Pattern C'],
+            ],
+            'edges' => [
+                ['from' => 1, 'to' => 2],
+                ['from' => 1, 'to' => 3],
+            ],
+        ];
+    }
+
+    private function get_scatter_plot_data() {
+        // This is a placeholder for a more sophisticated scatter plot implementation
+        return [
+            ['x' => 10, 'y' => 20],
+            ['x' => 20, 'y' => 30],
+            ['x' => 30, 'y' => 40],
+        ];
+    }
+
+    private function get_heat_map_data() {
+        // This is a placeholder for a more sophisticated heat map implementation
+        return [
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9],
+        ];
     }
 
     private function get_bloom_status() {

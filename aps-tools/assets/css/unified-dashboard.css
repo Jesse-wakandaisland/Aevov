@@ -1,0 +1,27 @@
+#aps-unified-dashboard {
+    padding: 20px;
+}
+
+.global-search-bar {
+    margin-bottom: 20px;
+}
+
+.command-center {
+    margin-bottom: 20px;
+}
+
+.activity-feed {
+    margin-bottom: 20px;
+}
+
+.knowledge-graph {
+    margin-bottom: 20px;
+}
+
+.scatter-plot {
+    margin-bottom: 20px;
+}
+
+.heat-map {
+    margin-bottom: 20px;
+}
