@@ -446,6 +446,38 @@ public function enqueue_assets($hook) {
                 return current_user_can('manage_options');
             }
         ]);
+
+        register_rest_route('aps-tools/v1', '/search', [
+            'methods' => 'GET',
+            'callback' => [$this, 'search'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
+
+        register_rest_route('aps-tools/v1', '/scan-directory', [
+            'methods' => 'POST',
+            'callback' => [$this, 'scan_directory'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
+
+        register_rest_route('aps-tools/v1/analyze-pattern', [
+            'methods' => 'POST',
+            'callback' => [$this, 'analyze_pattern_endpoint'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
+
+        register_rest_route('aps-tools/v1/compare-patterns', [
+            'methods' => 'POST',
+            'callback' => [$this, 'compare_patterns_endpoint'],
+            'permission_callback' => function() {
+                return current_user_can('manage_options');
+            }
+        ]);
     }
 public function handle_chunk_upload($request) {
     $chunk_data = $request->get_json_params();
@@ -720,6 +752,33 @@ private function store_chunk($chunk_data) {
             [4, 5, 6],
             [7, 8, 9],
         ];
+    }
+
+    public function search($request) {
+        $query = $request->get_param('q');
+        // This is a placeholder for a more sophisticated search implementation
+        return rest_ensure_response([
+            ['id' => 1, 'title' => 'Pattern A', 'type' => 'pattern'],
+            ['id' => 2, 'title' => 'Chunk 123', 'type' => 'chunk'],
+        ]);
+    }
+
+    public function scan_directory($request) {
+        $directory = $request->get_param('directory');
+        // This is a placeholder for a more sophisticated scan directory implementation
+        return rest_ensure_response(['status' => 'scanning', 'directory' => $directory]);
+    }
+
+    public function analyze_pattern_endpoint($request) {
+        $pattern_data = $request->get_param('pattern_data');
+        // This is a placeholder for a more sophisticated analyze pattern implementation
+        return rest_ensure_response(['status' => 'analyzing', 'pattern_data' => $pattern_data]);
+    }
+
+    public function compare_patterns_endpoint($request) {
+        $patterns = $request->get_param('patterns');
+        // This is a placeholder for a more sophisticated compare patterns implementation
+        return rest_ensure_response(['status' => 'comparing', 'patterns' => $patterns]);
     }
 
     private function get_bloom_status() {

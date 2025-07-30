@@ -4,10 +4,13 @@ function ActivityFeed() {
     const [activities, setActivities] = useState([]);
 
     useEffect(() => {
-        // Fetch activity feed data from the API
-        fetch('/wp-json/aps-tools/v1/activity-feed')
-            .then(response => response.json())
-            .then(data => setActivities(data));
+        const interval = setInterval(() => {
+            fetch('/wp-json/aps-tools/v1/activity-feed')
+                .then(response => response.json())
+                .then(data => setActivities(data));
+        }, 5000); // Poll every 5 seconds
+
+        return () => clearInterval(interval);
     }, []);
 
     return (
@@ -15,7 +18,7 @@ function ActivityFeed() {
             <h2>Activity Feed</h2>
             <ul>
                 {activities.map(activity => (
-                    <li key={activity.id}>{activity.message}</li>
+                    <li key={activity.id}>{activity.sync_type}: {activity.sync_data}</li>
                 ))}
             </ul>
         </div>
