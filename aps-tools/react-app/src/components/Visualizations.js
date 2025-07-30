@@ -14,7 +14,7 @@ function Visualizations() {
     }, []);
 
     if (!visualizationsData) {
-        return <div>Loading...</div>;
+        return <div className="loading">Loading...</div>;
     }
 
     return (

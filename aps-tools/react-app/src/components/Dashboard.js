@@ -14,7 +14,7 @@ function Dashboard() {
     }, []);
 
     if (!dashboardData) {
-        return <div>Loading...</div>;
+        return <div className="loading">Loading...</div>;
     }
 
     return (

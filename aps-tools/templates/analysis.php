@@ -14,6 +14,7 @@ if (!defined('ABSPATH')) exit;
                         <option value="sequential"><?php _e('Sequential', 'aps-tools'); ?></option>
                         <option value="structural"><?php _e('Structural', 'aps-tools'); ?></option>
                         <option value="statistical"><?php _e('Statistical', 'aps-tools'); ?></option>
+                        <option value="file"><?php _e('File', 'aps-tools'); ?></option>
                     </select>
                 </div>
 

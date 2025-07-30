@@ -30,6 +30,12 @@
     padding: 20px;
 }
 
+.loading {
+    text-align: center;
+    padding: 50px;
+    font-size: 20px;
+}
+
 .activity-feed h2 {
     margin-top: 0;
 }

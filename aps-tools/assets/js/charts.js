@@ -38,7 +38,7 @@
             var patternMetricsChart = new Chart(patternMetricsCtx, {
                 type: 'bar',
                 data: {
-                    labels: ['Sequential', 'Structural', 'Statistical'],
+                    labels: ['Sequential', 'Structural', 'Statistical', 'File'],
                     datasets: [{
                         label: 'Patterns Processed',
                         data: [0, 0, 0],

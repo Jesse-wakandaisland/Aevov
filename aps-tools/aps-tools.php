@@ -835,22 +835,40 @@ private function store_chunk($chunk_data) {
 
     public function scan_directory($request) {
         $directory = $request->get_param('directory');
-        $scanner = new Scanner\DirectoryScanner();
-        $results = $scanner->scan($directory);
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory));
+        $results = [];
+        foreach ($files as $file) {
+            if ($file->isDir()){
+                continue;
+            }
+            $results[] = $this->pattern_model->create([
+                'type' => 'file',
+                'features' => [
+                    'filename' => $file->getFilename(),
+                    'path' => $file->getPathname(),
+                    'size' => $file->getSize(),
+                ],
+                'confidence' => 1.0,
+            ]);
+        }
         return rest_ensure_response($results);
     }
 
     public function analyze_pattern_endpoint($request) {
-        $pattern_data = $request->get_param('pattern_data');
+        $pattern_id = $request->get_param('pattern_id');
+        $pattern = $this->pattern_model->get($pattern_id);
         $analyzer = new \APS\Analysis\SymbolicPatternAnalyzer();
-        $results = $analyzer->analyze_pattern($pattern_data);
+        $results = $analyzer->analyze_pattern($pattern->features);
         return rest_ensure_response($results);
     }
 
     public function compare_patterns_endpoint($request) {
-        $patterns = $request->get_param('patterns');
+        $pattern1_id = $request->get_param('pattern1_id');
+        $pattern2_id = $request->get_param('pattern2_id');
+        $pattern1 = $this->pattern_model->get($pattern1_id);
+        $pattern2 = $this->pattern_model->get($pattern2_id);
         $comparator = new \APS\Comparison\APS_Comparator();
-        $results = $comparator->compare_patterns($patterns);
+        $results = $comparator->compare_patterns([$pattern1->features, $pattern2->features]);
         return rest_ensure_response($results);
     }
 
@@ -951,6 +969,7 @@ public function handle_get_system_metrics() {
             'sequential' => $this->get_pattern_count_by_type('sequential'),
             'structural' => $this->get_pattern_count_by_type('structural'),
             'statistical' => $this->get_pattern_count_by_type('statistical'),
+            'file' => $this->get_pattern_count_by_type('file'),
         ],
         'avg_confidence' => $this->get_average_confidence(),
         'pattern_types' => $this->get_pattern_type_distribution(),
