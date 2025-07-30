@@ -19,12 +19,20 @@ class DistributedLedger
     private $currentTransactions;
 
     /**
+     * The list of nodes in the network.
+     *
+     * @var array
+     */
+    private $nodes;
+
+    /**
      * Constructor.
      */
     public function __construct()
     {
         $this->chain = [];
         $this->currentTransactions = [];
+        $this->nodes = [];
 
         // Create the genesis block.
         $this->newBlock(100, 1);
@@ -99,5 +107,85 @@ class DistributedLedger
         $blockString = json_encode($block, SORT_REGULAR);
 
         return hash('sha256', $blockString);
+    }
+
+    /**
+     * Registers a new node.
+     *
+     * @param string $address
+     */
+    public function registerNode(string $address): void
+    {
+        $parsedUrl = parse_url($address);
+        $this->nodes[] = $parsedUrl['host'];
+    }
+
+    /**
+     * Determines if a given blockchain is valid.
+     *
+     * @param array $chain
+     *
+     * @return bool
+     */
+    public function validChain(array $chain): bool
+    {
+        $lastBlock = $chain[0];
+        $currentIndex = 1;
+
+        while ($currentIndex < count($chain)) {
+            $block = $chain[$currentIndex];
+            // Check that the hash of the block is correct
+            if ($block['previous_hash'] !== self::hash($lastBlock)) {
+                return false;
+            }
+
+            // Check that the Proof of Work is correct
+            if (!ConsensusMechanism::validProof($lastBlock['proof'], $block['proof'])) {
+                return false;
+            }
+
+            $lastBlock = $block;
+            $currentIndex++;
+        }
+
+        return true;
+    }
+
+    /**
+     * This is our consensus algorithm, it resolves conflicts by replacing our chain with the longest one in the network.
+     *
+     * @return bool
+     */
+    public function resolveConflicts(): bool
+    {
+        $neighbours = $this->nodes;
+        $newChain = null;
+
+        // We're only looking for chains longer than ours
+        $maxLength = count($this->chain);
+
+        // Grab and verify the chains from all the nodes in our network
+        foreach ($neighbours as $node) {
+            $response = file_get_contents("http://{$node}/chain");
+
+            if ($response) {
+                $length = json_decode($response, true)['length'];
+                $chain = json_decode($response, true)['chain'];
+
+                // Check if the length is longer and the chain is valid
+                if ($length > $maxLength && $this->validChain($chain)) {
+                    $maxLength = $length;
+                    $newChain = $chain;
+                }
+            }
+        }
+
+        // Replace our chain if we discovered a new, valid chain longer than ours
+        if ($newChain) {
+            $this->chain = $newChain;
+            return true;
+        }
+
+        return false;
     }
 }

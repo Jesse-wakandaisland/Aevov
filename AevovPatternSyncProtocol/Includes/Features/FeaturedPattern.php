@@ -11,6 +11,16 @@ class FeaturedPattern
     {
         add_action('add_meta_boxes', [$this, 'add_meta_box']);
         add_action('save_post', [$this, 'save_meta_box']);
+        add_action('widgets_init', [$this, 'register_widget']);
+    }
+
+    /**
+     * Registers the widget.
+     */
+    public function register_widget()
+    {
+        require_once __DIR__ . '/FeaturedPatternWidget.php';
+        register_widget('\Aevov\Features\FeaturedPatternWidget');
     }
 
     /**

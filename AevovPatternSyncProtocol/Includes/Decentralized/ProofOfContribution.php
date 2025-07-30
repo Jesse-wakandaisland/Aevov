@@ -26,6 +26,13 @@ class ProofOfContribution
     private $rewards;
 
     /**
+     * The node identifier.
+     *
+     * @var string
+     */
+    private $node_identifier;
+
+    /**
      * Constructor.
      */
     public function __construct()
@@ -33,6 +40,7 @@ class ProofOfContribution
         $this->ledger = new DistributedLedger();
         $this->consensus = new ConsensusMechanism(1);
         $this->rewards = new RewardSystem();
+        $this->node_identifier = uniqid();
     }
 
     /**
@@ -64,5 +72,25 @@ class ProofOfContribution
         $this->rewards->reward($contribution->getContributor());
 
         return true;
+    }
+
+    /**
+     * Registers a new node.
+     *
+     * @param string $address
+     */
+    public function registerNode(string $address): void
+    {
+        $this->ledger->registerNode($address);
+    }
+
+    /**
+     * Resolves conflicts between nodes.
+     *
+     * @return bool
+     */
+    public function resolveConflicts(): bool
+    {
+        return $this->ledger->resolveConflicts();
     }
 }

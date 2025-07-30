@@ -47,7 +47,7 @@ class ConsensusMechanism
      *
      * @return bool
      */
-    public function validProof(int $lastProof, int $proof): bool
+    public static function validProof(int $lastProof, int $proof): bool
     {
         $guess = "{$lastProof}{$proof}";
         $guessHash = hash('sha256', $guess);
