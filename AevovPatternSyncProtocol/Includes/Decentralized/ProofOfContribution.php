@@ -27,19 +27,12 @@ class ProofOfContribution
 
     /**
      * Constructor.
-     *
-     * @param DistributedLedger  $ledger
-     * @param ConsensusMechanism $consensus
-     * @param RewardSystem       $rewards
      */
-    public function __construct(
-        DistributedLedger $ledger,
-        ConsensusMechanism $consensus,
-        RewardSystem $rewards
-    ) {
-        $this->ledger = $ledger;
-        $this->consensus = $consensus;
-        $this->rewards = $rewards;
+    public function __construct()
+    {
+        $this->ledger = new DistributedLedger();
+        $this->consensus = new ConsensusMechanism(1);
+        $this->rewards = new RewardSystem();
     }
 
     /**
@@ -51,29 +44,25 @@ class ProofOfContribution
      */
     public function submitContribution(Contribution $contribution): bool
     {
-        // ...
-    }
+        // In a real implementation, we would validate the contribution before adding it to the transaction list.
+        $this->ledger->newTransaction(
+            $contribution->getContributor()->getId(),
+            'network',
+            1.0
+        );
 
-    /**
-     * Validates a contribution.
-     *
-     * @param Contribution $contribution
-     *
-     * @return bool
-     */
-    public function validateContribution(Contribution $contribution): bool
-    {
-        // ...
-    }
+        // Mine a new block.
+        $lastBlock = $this->ledger->lastBlock();
+        $lastProof = $lastBlock['proof'];
+        $proof = $this->consensus->proofOfWork($lastProof);
 
-    /**
-     * Rewards a contributor.
-     *
-* @param Contributor $contributor
-     * @param float       $amount
-     */
-    public function rewardContributor(Contributor $contributor, float $amount): void
-    {
-        // ...
+        // Forge the new Block by adding it to the chain.
+        $previousHash = $this->ledger->hash($lastBlock);
+        $this->ledger->newBlock($proof, $previousHash);
+
+        // Reward the contributor.
+        $this->rewards->reward($contribution->getContributor());
+
+        return true;
     }
 }
