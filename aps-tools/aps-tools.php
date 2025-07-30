@@ -30,6 +30,7 @@ class APSTools {
             add_action('wp_ajax_aps_get_scan_status', [$this, 'handle_get_scan_status']);
             add_action('wp_ajax_aps_stop_scan', [$this, 'handle_stop_scan']);
             add_action('wp_ajax_aps_get_models_by_category', [$this, 'handle_get_models']);
+        add_action('wp_ajax_get_system_metrics', [$this, 'handle_get_system_metrics']);
             add_action('init', [$this, 'load_textdomain']); // Add this line
         }
     }
@@ -225,6 +226,23 @@ public function enqueue_assets($hook) {
     wp_enqueue_script(
         'handsontable',
         'https://cdn.jsdelivr.net/npm/handsontable@latest/dist/handsontable.full.min.js',
+        [],
+        null
+    );
+
+    // Charts.js
+    wp_enqueue_script(
+        'apstools-charts',
+        APSTOOLS_URL . 'assets/js/charts.js',
+        ['jquery', 'chartjs'],
+        APSTOOLS_VERSION,
+        true
+    );
+
+    // Chart.js
+    wp_enqueue_script(
+        'chartjs',
+        'https://cdn.jsdelivr.net/npm/chart.js',
         [],
         null
     );
@@ -541,6 +559,23 @@ private function store_chunk($chunk_data) {
         );
     }
 
+    private function get_pattern_count_by_type($type) {
+        global $wpdb;
+        return $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM {$wpdb->prefix}aps_patterns WHERE pattern_type = %s",
+                $type
+            )
+        );
+    }
+
+    private function get_average_confidence() {
+        global $wpdb;
+        return $wpdb->get_var(
+            "SELECT AVG(confidence) FROM {$wpdb->prefix}aps_patterns"
+        );
+    }
+
     private function get_bloom_status() {
         if (!class_exists('\BLOOM\Integration\APSIntegration')) {
             return 'inactive';
@@ -625,6 +660,22 @@ public function handle_stop_scan() {
     $processor = new Scanner\BatchProcessor();
     $processor->stop();
     wp_send_json_success();
+}
+
+public function handle_get_system_metrics() {
+    check_ajax_referer('aps-tools-nonce', 'nonce');
+
+    wp_send_json_success([
+        'cpu_usage' => $this->get_cpu_usage(),
+        'memory_usage' => $this->get_memory_usage(),
+        'patterns_processed' => [
+            'total' => $this->get_pattern_count(),
+            'sequential' => $this->get_pattern_count_by_type('sequential'),
+            'structural' => $this->get_pattern_count_by_type('structural'),
+            'statistical' => $this->get_pattern_count_by_type('statistical'),
+        ],
+        'avg_confidence' => $this->get_average_confidence(),
+    ]);
 }
     
 
