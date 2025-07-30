@@ -164,6 +164,7 @@ final class APS_Plugin {
         require_once APS_PATH . 'Includes/Features/PatternOfTheDay.php';
         require_once APS_PATH . 'Includes/Features/FeaturedPattern.php';
         require_once APS_PATH . 'Includes/Features/PatternSpotlight.php';
+        require_once APS_PATH . 'Includes/API/Endpoints/ProofOfContributionEndpoint.php';
     }
 
     private $poc;
@@ -208,6 +209,11 @@ final class APS_Plugin {
             // $this->loader->add_action('admin_menu', $this->admin, 'add_menu_pages');
             $this->loader->add_action('admin_enqueue_scripts', $this->admin, 'enqueue_assets');
         }
+
+        $this->loader->add_action('rest_api_init', function () {
+            $poc_endpoint = new \APS\API\Endpoints\ProofOfContributionEndpoint($this->poc);
+            $poc_endpoint->register_routes();
+        });
 
         $this->loader->run();
     }
