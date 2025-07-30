@@ -25,6 +25,7 @@ if ( ! defined( 'AEVOV_PATTERN_SYNC_PATH' ) ) {
 }
 
 require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Analysis/APS_Plugin.php';
+require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/ProofOfContribution.php';
 
 // Initialize the plugin.
 if ( ! function_exists( 'APS' ) ) {
