@@ -26,6 +26,11 @@ if ( ! defined( 'AEVOV_PATTERN_SYNC_PATH' ) ) {
 
 require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Analysis/APS_Plugin.php';
 require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/ProofOfContribution.php';
+require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/DistributedLedger.php';
+require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/ConsensusMechanism.php';
+require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/RewardSystem.php';
+require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/Contribution.php';
+require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/Contributor.php';
 
 // Initialize the plugin.
 if ( ! function_exists( 'APS' ) ) {
