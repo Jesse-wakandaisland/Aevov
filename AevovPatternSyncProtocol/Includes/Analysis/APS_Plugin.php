@@ -163,6 +163,8 @@ final class APS_Plugin {
         require_once APS_PATH . 'Includes/Integration/BloomIntegration.php';
     }
 
+    private $poc;
+
     private function init_components() {
         if ($this->loader === null) {
             $this->loader = new \APS\Core\Loader();
@@ -171,6 +173,15 @@ final class APS_Plugin {
         if ($this->admin === null) {
             $this->admin = new \APS\Admin\APS_Admin();
         }
+
+        $this->poc = new \Aevov\Decentralized\ProofOfContribution();
+    }
+
+    public function submit_contribution($data)
+    {
+        $contributor = new \Aevov\Decentralized\Contributor('test');
+        $contribution = new \Aevov\Decentralized\Contribution($contributor, $data);
+        return $this->poc->submitContribution($contribution);
     }
 
     private function init_hooks() {
