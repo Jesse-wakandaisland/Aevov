@@ -707,7 +707,7 @@ private function store_chunk($chunk_data) {
     public function get_activity_feed() {
         global $wpdb;
         $results = $wpdb->get_results(
-            "SELECT * FROM {$wpdb->prefix}aps_sync_log ORDER BY created_at DESC LIMIT 20"
+            "SELECT * FROM {$wpdb->prefix}aps_sync_log ORDER BY id DESC LIMIT 20"
         );
 
         return rest_ensure_response($results);
@@ -796,30 +796,62 @@ private function store_chunk($chunk_data) {
     }
 
     public function search($request) {
+        global $wpdb;
         $query = $request->get_param('q');
-        // This is a placeholder for a more sophisticated search implementation
-        return rest_ensure_response([
-            ['id' => 1, 'title' => 'Pattern A', 'type' => 'pattern'],
-            ['id' => 2, 'title' => 'Chunk 123', 'type' => 'chunk'],
-        ]);
+        $results = [];
+
+        // Search for patterns
+        $patterns = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}aps_patterns WHERE pattern_type LIKE %s",
+                '%' . $wpdb->esc_like($query) . '%'
+            )
+        );
+        foreach ($patterns as $pattern) {
+            $results[] = [
+                'id' => 'pattern-' . $pattern->id,
+                'title' => $pattern->pattern_type,
+                'type' => 'pattern',
+            ];
+        }
+
+        // Search for chunks
+        $chunks = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$wpdb->prefix}aps_pattern_chunks WHERE chunk_id LIKE %s",
+                '%' . $wpdb->esc_like($query) . '%'
+            )
+        );
+        foreach ($chunks as $chunk) {
+            $results[] = [
+                'id' => 'chunk-' . $chunk->chunk_id,
+                'title' => 'Chunk ' . $chunk->chunk_id,
+                'type' => 'chunk',
+            ];
+        }
+
+        return rest_ensure_response($results);
     }
 
     public function scan_directory($request) {
         $directory = $request->get_param('directory');
-        // This is a placeholder for a more sophisticated scan directory implementation
-        return rest_ensure_response(['status' => 'scanning', 'directory' => $directory]);
+        $scanner = new Scanner\DirectoryScanner();
+        $results = $scanner->scan($directory);
+        return rest_ensure_response($results);
     }
 
     public function analyze_pattern_endpoint($request) {
         $pattern_data = $request->get_param('pattern_data');
-        // This is a placeholder for a more sophisticated analyze pattern implementation
-        return rest_ensure_response(['status' => 'analyzing', 'pattern_data' => $pattern_data]);
+        $analyzer = new \APS\Analysis\SymbolicPatternAnalyzer();
+        $results = $analyzer->analyze_pattern($pattern_data);
+        return rest_ensure_response($results);
     }
 
     public function compare_patterns_endpoint($request) {
         $patterns = $request->get_param('patterns');
-        // This is a placeholder for a more sophisticated compare patterns implementation
-        return rest_ensure_response(['status' => 'comparing', 'patterns' => $patterns]);
+        $comparator = new \APS\Comparison\APS_Comparator();
+        $results = $comparator->compare_patterns($patterns);
+        return rest_ensure_response($results);
     }
 
     private function get_bloom_status() {
