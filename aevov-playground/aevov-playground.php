@@ -4,7 +4,7 @@ Plugin Name: Aevov Playground
 Plugin URI:
 Description: A unified, composable playground for all Aevov engines.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-playground
