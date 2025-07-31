@@ -4,7 +4,7 @@ Plugin Name: Aevov Cognitive Engine
 Plugin URI:
 Description: The cognitive layer of the Aevov network, integrating the Hierarchical Reasoning Model (HRM).
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-cognitive-engine
