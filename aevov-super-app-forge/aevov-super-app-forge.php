@@ -4,7 +4,7 @@ Plugin Name: Aevov Super-App Forge
 Plugin URI:
 Description: Universal application replicator and real-time generation engine for the Aevov network.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-super-app-forge
