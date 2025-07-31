@@ -16,7 +16,6 @@ class SimulationWorker {
         $job = $job_manager->get_job( $job_id );
         $weaver = new SimulationWeaver();
         $state = $weaver->get_initial_state( $job['params'] );
-
         $websocket_server = new WebSocketServer();
 
         while ( true ) {

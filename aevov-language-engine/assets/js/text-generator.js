@@ -1,38 +1,45 @@
 (function ($) {
-  'use strict';
+    'use strict';
 
-  var TextGenerator = {
-    init: function () {
-      $('#text-generator-form').on('submit', this.startTextGeneration);
-    },
+    $(function () {
+        $('#aevov-generate-text').on('click', function (e) {
+            e.preventDefault();
 
-    startTextGeneration: function (e) {
-      e.preventDefault();
-      var prompt = $('#prompt').val();
+            var $button = $(this);
+            var $spinner = $button.siblings('.spinner');
+            var $container = $('#aevov-generated-text-container');
+            var prompt = $('#aevov-prompt').val();
 
-      $.ajax({
-        url: '/wp-json/aevov-language/v1/generate',
-        method: 'POST',
-        data: {
-          prompt: prompt
-        },
-        beforeSend: function (xhr) {
-          // You might need a nonce if the endpoint requires authentication.
-        }
-      }).done(function (response) {
-        if (response.text) {
-          $('#text-result-container').html(response.text);
-        } else {
-          alert('Error generating text.');
-        }
-      }).fail(function () {
-        alert('Error generating text.');
-      });
-    }
-  };
+            if (!prompt) {
+                $container.html('<p style="color: red;">Please enter a prompt.</p>');
+                return;
+            }
 
-  $(document).ready(function () {
-    TextGenerator.init();
-  });
+            $button.prop('disabled', true);
+            $spinner.addClass('is-active');
+            $container.html('<p>Generating...</p>');
+
+            wp.apiFetch({
+                path: '/aevov-language-engine/v1/generate',
+                method: 'POST',
+                data: { prompt: prompt },
+            }).done(function (response) {
+                if (response.text) {
+                    $container.html('<p>' + response.text.replace(/\n/g, '<br>') + '</p>');
+                } else {
+                    $container.html('<p style="color: red;">An unknown error occurred.</p>');
+                }
+            }).fail(function (response) {
+                var errorMessage = 'An error occurred.';
+                if (response && response.responseJSON && response.responseJSON.message) {
+                    errorMessage = response.responseJSON.message;
+                }
+                $container.html('<p style="color: red;">' + errorMessage + '</p>');
+            }).always(function () {
+                $button.prop('disabled', false);
+                $spinner.removeClass('is-active');
+            });
+        });
+    });
 
 })(jQuery);

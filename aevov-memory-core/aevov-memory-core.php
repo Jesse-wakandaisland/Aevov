@@ -26,9 +26,32 @@ class AevovMemoryCore {
 
     public function init() {
         $this->include_dependencies();
+        add_action( 'init', [ $this, 'register_astrocyte_post_type' ] );
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
         new \AevovMemoryCore\API\MemoryEndpoint();
+    }
+
+    public function register_astrocyte_post_type() {
+        $labels = [
+            'name'                  => _x( 'Astrocytes', 'Post type general name', 'aevov-memory-core' ),
+            'singular_name'         => _x( 'Astrocyte', 'Post type singular name', 'aevov-memory-core' ),
+        ];
+        $args = [
+            'labels'             => $labels,
+            'public'             => true,
+            'publicly_queryable' => true,
+            'show_ui'            => true,
+            'show_in_menu'       => true,
+            'query_var'          => true,
+            'rewrite'            => [ 'slug' => 'astrocyte' ],
+            'capability_type'    => 'post',
+            'has_archive'        => true,
+            'hierarchical'       => false,
+            'menu_position'      => null,
+            'supports'           => [ 'title', 'editor', 'custom-fields' ],
+        ];
+        register_post_type( 'astrocyte', $args );
     }
 
     private function include_dependencies() {

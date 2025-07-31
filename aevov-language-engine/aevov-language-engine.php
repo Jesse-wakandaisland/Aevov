@@ -17,12 +17,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AevovLanguageEngine {
 
-    public function __construct() {
+    private static $instance = null;
+    public $ingestion_engine;
+    public $weaver;
+    private $admin_page_hook_suffix;
+
+    public static function get_instance() {
+        if ( is_null( self::$instance ) ) {
+            self::$instance = new self();
+        }
+        return self::$instance;
+    }
+
+    private function __construct() {
         add_action( 'plugins_loaded', [ $this, 'init' ] );
     }
 
     public function init() {
         $this->include_dependencies();
+        $this->ingestion_engine = new \AevovLanguageEngine\Core\LLMIngestionEngine();
+        $this->weaver = new \AevovLanguageEngine\Core\LanguageWeaver();
+        new \AevovLanguageEngine\API\LanguageEndpoint( $this->weaver );
+
+        add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
     }
 
     private function include_dependencies() {
@@ -30,15 +48,6 @@ class AevovLanguageEngine {
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-language-weaver.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-language-worker.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/api/class-language-endpoint.php';
-    }
-
-    private $admin_page_hook_suffix;
-
-    public function init() {
-        $this->include_dependencies();
-        add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
-        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
-        new \AevovLanguageEngine\API\LanguageEndpoint();
     }
 
     public function add_admin_menu() {
@@ -61,14 +70,40 @@ class AevovLanguageEngine {
         wp_enqueue_script(
             'aevov-text-generator',
             plugin_dir_url( __FILE__ ) . 'assets/js/text-generator.js',
-            [ 'jquery' ],
-            '1.0.0',
+            [ 'jquery', 'wp-api' ],
+            '1.0.1',
             true
         );
+
+        wp_localize_script( 'aevov-text-generator', 'aevovLanguageEngine', [
+            'apiUrl' => rest_url( 'aevov-language-engine/v1/generate' ),
+            'nonce'  => wp_create_nonce( 'wp_rest' ),
+        ] );
     }
 
     public function render_admin_page() {
         include plugin_dir_path( __FILE__ ) . 'templates/admin-page.php';
+    }
+
+    /**
+     * Ingests a model from a given path.
+     *
+     * @param string $model_path The path to the model file.
+     * @return bool|WP_Error True on success, WP_Error on failure.
+     */
+    public function ingest_model( $model_path ) {
+        return $this->ingestion_engine->ingest_from_path( $model_path );
+    }
+
+    /**
+     * Generates text based on a given prompt and parameters.
+     *
+     * @param string $prompt The input prompt.
+     * @param array $params Generation parameters.
+     * @return string The generated text.
+     */
+    public function generate_text( $prompt, $params = [] ) {
+        return $this->weaver->generate( $prompt, $params );
     }
 }
 
