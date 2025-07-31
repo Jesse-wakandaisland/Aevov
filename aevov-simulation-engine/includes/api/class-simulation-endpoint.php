@@ -29,6 +29,12 @@ class SimulationEndpoint {
             'callback'            => [ $this, 'interact_with_simulation' ],
             'permission_callback' => '__return_true',
         ] );
+
+        register_rest_route( 'aevov-sim/v1', '/visualize', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'visualize_model' ],
+            'permission_callback' => '__return_true',
+        ] );
     }
 
     public function start_simulation( $request ) {
@@ -55,5 +61,12 @@ class SimulationEndpoint {
         // This is where we would send the interaction to the backend worker.
         // For now, I'll just return a success message.
         return new \WP_REST_Response( [ 'status' => 'interaction_received' ] );
+    }
+
+    public function visualize_model( $request ) {
+        $model = $request->get_param( 'model' );
+        $engine = new \AevovSimulationEngine\AevovSimulationEngine();
+        $visualization = $engine->render_virtual_brain( $model );
+        return new \WP_REST_Response( [ 'visualization' => $visualization ] );
     }
 }

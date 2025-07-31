@@ -73,6 +73,13 @@ class AevovSimulationEngine {
         include plugin_dir_path( __FILE__ ) . 'templates/admin-page.php';
     }
 
+    public function render_virtual_brain( $model ) {
+        // This is a placeholder.
+        // In a real implementation, this would render a 3D visualization
+        // of the composed model.
+        return '<pre>' . print_r( $model, true ) . '</pre>';
+    }
+
     private function include_dependencies() {
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-simulation-weaver.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-job-manager.php';
