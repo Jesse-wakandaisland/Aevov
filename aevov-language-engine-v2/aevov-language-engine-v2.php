@@ -4,7 +4,7 @@ Plugin Name: Aevov Language Engine v2
 Plugin URI:
 Description: Aevov's GPU-free, CDN-powered Large Language Model (LLM) engine.
 Version: 2.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-language-engine-v2
