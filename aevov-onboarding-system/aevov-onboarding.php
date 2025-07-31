@@ -33,7 +33,10 @@ class AevovOnboardingSystem {
         'aevov-chunk-registry/aevov-chunk-registry.php' => 'Aevov Chunk Registry',
         'aevov-neuro-architect/aevov-neuro-architect.php' => 'Aevov Neuro-Architect',
         'aevov-playground/aevov-playground.php' => 'Aevov Playground',
-        'aevov-memory-core/aevov-memory-core.php' => 'Aevov Memory Core'
+        'aevov-memory-core/aevov-memory-core.php' => 'Aevov Memory Core',
+        'aevov-memory-core/aevov-memory-core.php' => 'Aevov Memory Core',
+        'aevov-reasoning-engine/aevov-reasoning-engine.php' => 'Aevov Reasoning Engine',
+        'aevov-cognitive-engine/aevov-cognitive-engine.php' => 'Aevov Cognitive Engine'
     ];
     
     private $onboarding_steps = [
