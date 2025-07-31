@@ -9,16 +9,27 @@ class ImageWeaver {
     }
 
     public function get_pattern_ids( $params ) {
-        $catalog = new \AevovNeuroArchitect\NeuralPatternCatalog();
-        $patterns = [];
-        if ( isset( $params['prompt'] ) ) {
-            // This is a placeholder for a more sophisticated prompt analysis.
-            $keywords = explode( ' ', $params['prompt'] );
-            foreach ( $keywords as $keyword ) {
-                $patterns = array_merge( $patterns, $catalog->get_patterns_by_type( 'image-tag-' . $keyword ) );
-            }
-        }
+        $embedding = $this->get_embedding( $params['prompt'] );
+        $patterns = $this->find_similar_patterns( $embedding );
         $pattern_ids = wp_list_pluck( $patterns, 'id' );
         return $pattern_ids;
+    }
+
+    private function get_embedding( $prompt ) {
+        // This is a placeholder.
+        // In a real implementation, this would use the Aevov Embedding Engine
+        // to get an embedding for the prompt.
+        return [ 0.1, 0.2, 0.3, 0.4, 0.5 ];
+    }
+
+    private function find_similar_patterns( $embedding ) {
+        // This is a placeholder.
+        // In a real implementation, this would use the Aevov Chunk Registry
+        // to find patterns with similar embeddings.
+        return [
+            [ 'id' => 'pattern-1' ],
+            [ 'id' => 'pattern-2' ],
+            [ 'id' => 'pattern-3' ],
+        ];
     }
 }

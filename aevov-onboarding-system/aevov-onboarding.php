@@ -36,7 +36,9 @@ class AevovOnboardingSystem {
         'aevov-memory-core/aevov-memory-core.php' => 'Aevov Memory Core',
         'aevov-memory-core/aevov-memory-core.php' => 'Aevov Memory Core',
         'aevov-reasoning-engine/aevov-reasoning-engine.php' => 'Aevov Reasoning Engine',
-        'aevov-cognitive-engine/aevov-cognitive-engine.php' => 'Aevov Cognitive Engine'
+        'aevov-cognitive-engine/aevov-cognitive-engine.php' => 'Aevov Cognitive Engine',
+        'aevov-transcription-engine/aevov-transcription-engine.php' => 'Aevov Transcription Engine',
+        'aevov-embedding-engine/aevov-embedding-engine.php' => 'Aevov Embedding Engine'
     ];
     
     private $onboarding_steps = [
