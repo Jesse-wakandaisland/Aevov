@@ -61,14 +61,26 @@ class StreamEndpoint {
 
     public function get_playlist( $request ) {
         $session_id = $request['session_id'];
+        $variant_id = $request->get_param( 'variant' );
+
         $session_manager = new SessionManager();
         $session = $session_manager->get_session( $session_id );
-
-        // This is where we would get the playlist from the session.
-        // For now, I'll just generate a dummy playlist.
-        $pattern_ids = [ 1, 2, 3, 4, 5 ];
         $playlist_generator = new PlaylistGenerator();
-        $playlist = $playlist_generator->generate( $pattern_ids );
+
+        if ( $variant_id ) {
+            // This is where we would get the pattern IDs for the variant stream.
+            // For now, I'll just use some dummy data.
+            $pattern_ids = [ 1, 2, 3, 4, 5 ];
+            $playlist = $playlist_generator->generate_variant_playlist( $pattern_ids );
+        } else {
+            // This is where we would get the different streams for the master playlist.
+            // For now, I'll just use some dummy data.
+            $streams = [
+                [ 'id' => 'low', 'bandwidth' => 250000, 'resolution' => '416x234', 'session_id' => $session_id ],
+                [ 'id' => 'high', 'bandwidth' => 750000, 'resolution' => '640x360', 'session_id' => $session_id ],
+            ];
+            $playlist = $playlist_generator->generate( $streams );
+        }
 
         $response = new \WP_REST_Response( $playlist );
         $response->set_headers( [
@@ -99,8 +111,12 @@ class StreamEndpoint {
             return $presigned_url;
         }
 
-        // Redirect to the pre-signed URL.
-        wp_redirect( $presigned_url );
+        $content = file_get_contents( $presigned_url );
+        $content = apply_filters( 'aevov_stream_drm_encrypt', $content );
+        $content = apply_filters( 'aevov_stream_add_watermark', $content );
+
+        // This is where we would output the content.
+        // For now, I'll just exit.
         exit;
     }
 }

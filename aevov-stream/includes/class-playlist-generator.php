@@ -4,7 +4,19 @@ namespace AevovStream;
 
 class PlaylistGenerator {
 
-    public function generate( $pattern_ids ) {
+    public function generate( $streams ) {
+        $master_playlist = "#EXTM3U\n";
+        $master_playlist .= "#EXT-X-VERSION:3\n";
+
+        foreach ( $streams as $stream ) {
+            $master_playlist .= "#EXT-X-STREAM-INF:BANDWIDTH={$stream['bandwidth']},RESOLUTION={$stream['resolution']}\n";
+            $master_playlist .= site_url( '/wp-json/aevov-stream/v1/playlist/' . $stream['session_id'] . '?variant=' . $stream['id'] ) . "\n";
+        }
+
+        return $master_playlist;
+    }
+
+    public function generate_variant_playlist( $pattern_ids ) {
         $playlist = "#EXTM3U\n";
         $playlist .= "#EXT-X-VERSION:3\n";
         $playlist .= "#EXT-X-TARGETDURATION:10\n";

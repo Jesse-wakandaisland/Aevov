@@ -25,8 +25,46 @@ class AevovStream {
         $this->include_dependencies();
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+        add_action( 'admin_init', [ $this, 'register_settings' ] );
         add_shortcode( 'aevov_stream_player', [ $this, 'render_stream_player' ] );
+        register_activation_hook( __FILE__, [ $this, 'activate' ] );
         new \AevovStream\API\StreamEndpoint();
+    }
+
+    public function register_settings() {
+        register_setting( 'aevov_stream_options', 'aevov_stream_options' );
+        add_settings_section( 'aevov_stream_main', __( 'Main Settings', 'aevov-stream' ), null, 'aevov_stream' );
+        add_settings_field( 'aevov_stream_bitrates', __( 'Bitrates', 'aevov-stream' ), [ $this, 'render_bitrates_field' ], 'aevov_stream', 'aevov_stream_main' );
+    }
+
+    public function render_bitrates_field() {
+        $options = get_option( 'aevov_stream_options' );
+        $bitrates = isset( $options['bitrates'] ) ? $options['bitrates'] : '250000,750000';
+        echo '<input type="text" name="aevov_stream_options[bitrates]" value="' . esc_attr( $bitrates ) . '">';
+    }
+
+    public function activate() {
+        $this->create_sessions_table();
+    }
+
+    private function create_sessions_table() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'aevov_stream_sessions';
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            session_id varchar(255) NOT NULL,
+            user_id bigint(20) NOT NULL,
+            params text NOT NULL,
+            playlist text NOT NULL,
+            created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            updated_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
     }
 
     public function add_admin_menu() {
@@ -46,9 +84,14 @@ class AevovStream {
     }
 
     public function render_stream_player() {
-        ob_start();
-        include plugin_dir_path( __FILE__ ) . 'templates/stream-player.php';
-        return ob_get_clean();
+        if ( class_exists( 'LiteSpeed_Cache_API' ) && LiteSpeed_Cache_API::is_esi_enabled() ) {
+            $esi = new \AevovStream\ESI();
+            return $esi->render_esi_block( 'aevov_stream_player', [] );
+        } else {
+            ob_start();
+            include plugin_dir_path( __FILE__ ) . 'templates/stream-player.php';
+            return ob_get_clean();
+        }
     }
 
     public function enqueue_scripts() {
@@ -66,6 +109,10 @@ class AevovStream {
     private function include_dependencies() {
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-playlist-generator.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-session-manager.php';
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-stream-weaver.php';
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-drm-manager.php';
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-watermark-manager.php';
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-esi.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/api/class-stream-endpoint.php';
     }
 }
