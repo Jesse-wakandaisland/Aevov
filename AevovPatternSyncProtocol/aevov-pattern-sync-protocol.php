@@ -31,6 +31,7 @@ require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/ConsensusMechanis
 require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/RewardSystem.php';
 require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/Contribution.php';
 require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Decentralized/Contributor.php';
+require_once AEVOV_PATTERN_SYNC_PATH . 'Includes/Admin/APS_Tools.php';
 
 // Initialize the plugin.
 if ( ! function_exists( 'APS' ) ) {

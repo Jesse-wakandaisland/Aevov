@@ -9,12 +9,14 @@ class APS_Admin {
     private $settings;
     private $metaboxes;
     private $bloom_integration;
-    
+    private $tools;
+
     public function __construct() {
         $this->settings = new APS_Settings();
         $this->metaboxes = new APS_Metaboxes();
         $this->bloom_integration = new APS_BLOOM_Integration();
-        
+        $this->tools = new APS_Tools();
+
         $this->init_hooks();
     }
 
@@ -23,14 +25,14 @@ class APS_Admin {
             // Admin menu and pages
             add_action('admin_menu', [$this, 'add_menu_pages']);
             add_action('admin_init', [$this, 'init_settings']);
-            
+
             // Admin scripts and styles
             add_action('admin_enqueue_scripts', [$this, 'enqueue_assets']);
-            
+
             // AJAX handlers
             add_action('wp_ajax_aps_run_comparison', [$this, 'handle_comparison_ajax']);
             add_action('wp_ajax_aps_get_pattern_details', [$this, 'handle_pattern_details_ajax']);
-            
+
             // Integration hooks
             add_action('bloom_admin_pattern_updated', [$this, 'sync_bloom_pattern']);
         }
@@ -61,7 +63,7 @@ class APS_Admin {
                 __('Pattern Sync Tools', 'aps'),
                 'manage_options',
                 'aps-pattern-sync-tools',
-                [$this, 'render_tools']
+                [$this->tools, 'render_tools_page']
             );
 
             // Add Proof of Contribution submenu to APS Tools
@@ -73,6 +75,16 @@ class APS_Admin {
                 'aps-poc',
                 [$this, 'render_poc']
             );
+
+            // Add Documentation submenu to APS Tools
+            add_submenu_page(
+                'aps-dashboard', // Parent slug from APS Tools
+                __('Documentation', 'aps'),
+                __('Documentation', 'aps'),
+                'manage_options',
+                'aps-docs',
+                [$this, 'render_docs']
+            );
         }
     }
 
@@ -81,17 +93,17 @@ class APS_Admin {
      */
     private function aps_tools_menu_exists() {
         global $menu;
-        
+
         if (!is_array($menu)) {
             return false;
         }
-        
+
         foreach ($menu as $menu_item) {
             if (isset($menu_item[2]) && $menu_item[2] === 'aps-dashboard') {
                 return true;
             }
         }
-        
+
         return false;
     }
 
@@ -240,7 +252,7 @@ class APS_Admin {
         global $wpdb;
 
         $comparison = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}aps_comparisons 
+            "SELECT * FROM {$wpdb->prefix}aps_comparisons
              WHERE id = %d",
             $comparison_id
         ));
@@ -250,8 +262,8 @@ class APS_Admin {
         }
 
         $comparison->results = $wpdb->get_results($wpdb->prepare(
-            "SELECT * FROM {$wpdb->prefix}aps_results 
-             WHERE comparison_id = %d 
+            "SELECT * FROM {$wpdb->prefix}aps_results
+             WHERE comparison_id = %d
              ORDER BY match_score DESC",
             $comparison_id
         ));
@@ -263,8 +275,8 @@ class APS_Admin {
         global $wpdb;
 
         return $wpdb->get_results(
-            "SELECT DISTINCT pattern_hash, pattern_data 
-             FROM {$wpdb->prefix}aps_patterns_cache 
+            "SELECT DISTINCT pattern_hash, pattern_data
+             FROM {$wpdb->prefix}aps_patterns_cache
              WHERE cache_expires > NOW()"
         );
     }
@@ -305,32 +317,6 @@ class APS_Admin {
     }
 
     /**
-     * Render tools page
-     */
-    public function render_tools() {
-        echo '<div class="wrap">';
-        echo '<h1>' . (function_exists('__') ? __('APS Tools', 'aps') : 'APS Tools') . '</h1>';
-        echo '<div class="aps-tools-grid">';
-        
-        // System diagnostics tool
-        echo '<div class="aps-tool-card">';
-        echo '<h3>' . (function_exists('__') ? __('System Diagnostics', 'aps') : 'System Diagnostics') . '</h3>';
-        echo '<p>' . (function_exists('__') ? __('Run comprehensive system checks and diagnostics.', 'aps') : 'Run comprehensive system checks and diagnostics.') . '</p>';
-        echo '<button class="button button-primary" onclick="apsRunDiagnostics()">' . (function_exists('__') ? __('Run Diagnostics', 'aps') : 'Run Diagnostics') . '</button>';
-        echo '</div>';
-        
-        // Pattern sync tool
-        echo '<div class="aps-tool-card">';
-        echo '<h3>' . (function_exists('__') ? __('Pattern Synchronization', 'aps') : 'Pattern Synchronization') . '</h3>';
-        echo '<p>' . (function_exists('__') ? __('Synchronize patterns with BLOOM integration.', 'aps') : 'Synchronize patterns with BLOOM integration.') . '</p>';
-        echo '<button class="button button-primary" onclick="apsRunPatternSync()">' . (function_exists('__') ? __('Sync Patterns', 'aps') : 'Sync Patterns') . '</button>';
-        echo '</div>';
-        
-        echo '</div>';
-        echo '</div>';
-    }
-
-    /**
      * Handle pattern details AJAX request
      */
     public function handle_pattern_details_ajax() {
@@ -346,7 +332,7 @@ class APS_Admin {
         }
 
         $pattern_id = $_POST['pattern_id'] ?? 0;
-        
+
         try {
             $pattern_details = $this->get_pattern_details($pattern_id);
             if (function_exists('wp_send_json_success')) {
@@ -366,7 +352,7 @@ class APS_Admin {
         try {
             if ($this->bloom_integration && method_exists($this->bloom_integration, 'sync_pattern')) {
                 $result = $this->bloom_integration->sync_pattern($pattern_data);
-                
+
                 // Log the sync result
                 if (class_exists('\APS\Utilities\Logger')) {
                     $logger = new \APS\Utilities\Logger();
@@ -375,7 +361,7 @@ class APS_Admin {
                         'success' => $result['success'] ?? false
                     ]);
                 }
-                
+
                 return $result;
             }
         } catch (Exception $e) {
@@ -383,10 +369,10 @@ class APS_Admin {
                 $logger = new \APS\Utilities\Logger();
                 $logger->error('BLOOM pattern sync failed: ' . $e->getMessage());
             }
-            
+
             return ['success' => false, 'error' => $e->getMessage()];
         }
-        
+
         return ['success' => false, 'error' => 'BLOOM integration not available'];
     }
 

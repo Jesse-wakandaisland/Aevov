@@ -216,4 +216,27 @@
         });
     }
 
+    // Handle clear cache button click
+    $('#aps-clear-cache').on('click', function() {
+        if (!confirm(apsAdmin.i18n.confirm)) {
+            return;
+        }
+
+        $.ajax({
+            url: apsAdmin.ajaxUrl,
+            method: 'POST',
+            data: {
+                action: 'aps_clear_cache',
+                nonce: apsAdmin.nonce
+            },
+            success: function(response) {
+                alert(response.message);
+            },
+            error: function(xhr, status, error) {
+                console.error('Error clearing cache:', error);
+                alert(apsAdmin.i18n.error);
+            }
+        });
+    });
+
 })(jQuery);
