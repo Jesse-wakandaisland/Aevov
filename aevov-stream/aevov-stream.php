@@ -4,7 +4,7 @@ Plugin Name: Aevov Stream
 Plugin URI:
 Description: Real-time streaming of Aevov patterns.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-stream
