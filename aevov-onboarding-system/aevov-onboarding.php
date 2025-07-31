@@ -23,7 +23,8 @@ class AevovOnboardingSystem {
         'bloom-chunk-scanner/bloom-chunk-scanner.php' => 'BLOOM Chunk Scanner',
         'APS Chunk Uploader/chunk-uploader.php' => 'APS Chunk Uploader',
         'aevov-cubbit-cdn/aevov-cubbit-cdn.php' => 'Aevov Cubbit CDN',
-        'aevov-stream/aevov-stream.php' => 'Aevov Stream'
+        'aevov-stream/aevov-stream.php' => 'Aevov Stream',
+        'aevov-image-engine/aevov-image-engine.php' => 'Aevov Image Engine'
     ];
     
     private $onboarding_steps = [
