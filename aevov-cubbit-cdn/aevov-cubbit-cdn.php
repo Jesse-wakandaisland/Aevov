@@ -4,7 +4,7 @@ Plugin Name: Aevov Cubbit CDN
 Plugin URI:
 Description: Serves Aevov model chunks from Cubbit via a CDN with LiteSpeed caching.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-cubbit-cdn
