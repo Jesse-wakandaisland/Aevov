@@ -25,7 +25,8 @@ class AevovOnboardingSystem {
         'aevov-cubbit-cdn/aevov-cubbit-cdn.php' => 'Aevov Cubbit CDN',
         'aevov-stream/aevov-stream.php' => 'Aevov Stream',
         'aevov-image-engine/aevov-image-engine.php' => 'Aevov Image Engine',
-        'aevov-music-forge/aevov-music-forge.php' => 'Aevov Music Forge'
+        'aevov-music-forge/aevov-music-forge.php' => 'Aevov Music Forge',
+        'aevov-simulation-engine/aevov-simulation-engine.php' => 'Aevov Simulation Engine'
     ];
     
     private $onboarding_steps = [
