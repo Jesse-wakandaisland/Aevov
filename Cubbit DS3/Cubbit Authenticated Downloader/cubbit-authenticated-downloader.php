@@ -3,7 +3,7 @@
 Plugin Name: Cubbit Authenticated Bulk Downloader
 Plugin URI: https://algorithmpress.com
 Description: Download multiple files (including private files) from Cubbit S3 storage
-Version: 1.0
+Version: 1.1
 Author: WPWakanda, LLC
 Author URI: https://yourwebsite.com/
 */
@@ -29,10 +29,14 @@ class CubbitAuthenticatedDownloader {
         
         // Create temp directory if it doesn't exist
         if (!file_exists($this->temp_dir)) {
-            wp_mkdir_p($this->temp_dir);
-            
-            // Create .htaccess to prevent direct access
-            file_put_contents($this->temp_dir . '/.htaccess', 'deny from all');
+            if (wp_mkdir_p($this->temp_dir)) {
+                // Create .htaccess to prevent direct access
+                if (file_put_contents($this->temp_dir . '/.htaccess', 'deny from all') === false) {
+                    $this->log_error("Failed to create .htaccess file in temp directory.");
+                }
+            } else {
+                $this->log_error("Failed to create temp directory.");
+            }
         }
     }
 
@@ -56,6 +60,9 @@ class CubbitAuthenticatedDownloader {
         
         // Add cleanup for temporary files
         add_action('wp_scheduled_delete', [$this, 'cleanup_temp_files']);
+
+        // Add cron hook for processing download jobs
+        add_action('cubbit_process_download_job', [$this, 'process_download_job']);
     }
 
     /**
@@ -81,14 +88,14 @@ class CubbitAuthenticatedDownloader {
             'cubbit-auth-downloader-styles', 
             plugin_dir_url(__FILE__) . 'css/auth-downloader.css', 
             [], 
-            '1.0'
+            '1.1'
         );
         
         wp_enqueue_script(
             'cubbit-auth-downloader-script', 
             plugin_dir_url(__FILE__) . 'js/auth-downloader.js', 
             ['jquery', 'cubbit-directory-script'], 
-            '1.0', 
+            '1.1',
             true
         );
         
@@ -110,7 +117,7 @@ class CubbitAuthenticatedDownloader {
             return;
         }
         
-        $items = isset($_POST['items']) ? array_map('sanitize_text_field', $_POST['items']) : [];
+        $items = isset($_POST['items']) ? array_map('sanitize_text_field', wp_unslash($_POST['items'])) : [];
         
         if (empty($items)) {
             wp_send_json_error('No items selected for download');
@@ -122,7 +129,10 @@ class CubbitAuthenticatedDownloader {
         
         // Create a subfolder for this download
         $download_path = $this->temp_dir . '/' . $download_id;
-        wp_mkdir_p($download_path);
+        if (!wp_mkdir_p($download_path)) {
+            wp_send_json_error('Failed to create download directory.');
+            return;
+        }
         
         // Store info about the download job
         $download_job = [
@@ -149,8 +159,8 @@ class CubbitAuthenticatedDownloader {
             'total_items' => count($items)
         ]);
         
-        // Then process the download in the background
-        $this->process_download_job($download_id);
+        // Schedule a one-time cron event to process the download
+        wp_schedule_single_event(time(), 'cubbit_process_download_job', [$download_id]);
         exit;
     }
     
@@ -205,7 +215,8 @@ class CubbitAuthenticatedDownloader {
                 'status' => $download_job['status'],
                 'progress' => $download_job['progress'],
                 'processed_items' => $download_job['processed_items'],
-                'total_items' => $download_job['total_items']
+                'total_items' => $download_job['total_items'],
+                'progress_text' => $this->get_progress_text($download_job)
             ]);
         }
     }
@@ -215,8 +226,8 @@ class CubbitAuthenticatedDownloader {
      */
     public function ajax_get_download_file() {
         // Check for download token
-        $download_id = isset($_GET['download_id']) ? sanitize_text_field($_GET['download_id']) : '';
-        $token = isset($_GET['token']) ? sanitize_text_field($_GET['token']) : '';
+        $download_id = isset($_GET['download_id']) ? sanitize_text_field(wp_unslash($_GET['download_id'])) : '';
+        $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
         
         if (empty($download_id) || empty($token)) {
             wp_die('Invalid download request');
@@ -225,10 +236,13 @@ class CubbitAuthenticatedDownloader {
         // Verify token
         $expected_token = get_transient('cubbit_download_token_' . $download_id);
         
-        if ($token !== $expected_token) {
+        if (empty($expected_token) || !hash_equals($expected_token, $token)) {
             wp_die('Invalid download token');
         }
         
+        // Invalidate the token after use
+        delete_transient('cubbit_download_token_' . $download_id);
+
         // Get the download job
         $download_job = get_transient('cubbit_download_job_' . $download_id);
         
@@ -263,11 +277,32 @@ class CubbitAuthenticatedDownloader {
         
         exit;
     }
+
+    private function get_progress_text($download_job) {
+        switch ($download_job['status']) {
+            case 'initializing':
+                return __('Initializing download...', 'cubbit-auth-downloader');
+            case 'downloading':
+                return sprintf(
+                    __('Downloading files: %d of %d', 'cubbit-auth-downloader'),
+                    $download_job['processed_items'],
+                    $download_job['total_items']
+                );
+            case 'creating_zip':
+                return __('Creating ZIP archive...', 'cubbit-auth-downloader');
+            case 'completed':
+                return __('Download complete!', 'cubbit-auth-downloader');
+            case 'failed':
+                return __('Download failed.', 'cubbit-auth-downloader');
+            default:
+                return '';
+        }
+    }
     
     /**
      * Process a download job
      */
-    private function process_download_job($download_id) {
+    public function process_download_job($download_id) {
         // Get the download job
         $download_job = get_transient('cubbit_download_job_' . $download_id);
         
@@ -396,7 +431,7 @@ class CubbitAuthenticatedDownloader {
                 // Schedule cleanup
                 wp_schedule_single_event(time() + 12 * HOUR_IN_SECONDS, 'wp_scheduled_delete', ['cubbit_cleanup_' . $download_id]);
                 
-                $this->log_error("Download job completed: {$download_id}");
+                $this->log("Download job completed: {$download_id}");
             } else {
                 $download_job['status'] = 'failed';
                 $download_job['errors'][] = 'Failed to create ZIP archive: ' . $zip_result['message'];
@@ -419,7 +454,7 @@ class CubbitAuthenticatedDownloader {
      * Download a file from Cubbit S3 with authentication
      */
     private function download_file($bucket, $key, $download_path, $base_folder = '') {
-        $this->log_error("Downloading file: {$key}");
+        $this->log("Downloading file: {$key}");
         
         // Get Cubbit credentials
         $access_key = get_option('cubbit_access_key');
@@ -452,7 +487,12 @@ class CubbitAuthenticatedDownloader {
         
         // Create directory structure if it doesn't exist
         if (!file_exists($local_dir)) {
-            wp_mkdir_p($local_dir);
+            if (!wp_mkdir_p($local_dir)) {
+                return [
+                    'success' => false,
+                    'message' => "Failed to create directory: {$local_dir}"
+                ];
+            }
         }
         
         // Format date for AWS requirement
@@ -559,9 +599,7 @@ class CubbitAuthenticatedDownloader {
         }
         
         // Save file content
-        $result = file_put_contents($local_file, $file_content);
-        
-        if ($result === false) {
+        if (file_put_contents($local_file, $file_content) === false) {
             $this->log_error("Failed to save {$key} to {$local_file}");
             return [
                 'success' => false,
@@ -569,7 +607,7 @@ class CubbitAuthenticatedDownloader {
             ];
         }
         
-        $this->log_error("Successfully downloaded {$key} to {$local_file}");
+        $this->log("Successfully downloaded {$key} to {$local_file}");
         
         // Return success with file details
         return [
@@ -584,7 +622,7 @@ class CubbitAuthenticatedDownloader {
      * Create a ZIP archive of downloaded files
      */
     private function create_zip_archive($download_path, $download_id) {
-        $this->log_error("Creating ZIP archive for {$download_id}");
+        $this->log("Creating ZIP archive for {$download_id}");
         
         // Create ZIP filename
         $zip_filename = 'cubbit-files-' . date('Y-m-d-His') . '.zip';
@@ -642,7 +680,7 @@ class CubbitAuthenticatedDownloader {
             ];
         }
         
-        $this->log_error("Successfully created ZIP archive with {$file_count} files");
+        $this->log("Successfully created ZIP archive with {$file_count} files");
         
         return [
             'success' => true,
@@ -948,7 +986,7 @@ class CubbitAuthenticatedDownloader {
                 delete_transient('cubbit_download_job_' . $download_id);
                 delete_transient('cubbit_download_token_' . $download_id);
                 
-                $this->log_error("Cleaned up download job: {$download_id}");
+                $this->log("Cleaned up download job: {$download_id}");
             }
         } else {
             // Clean up all downloads older than 1 day
@@ -960,7 +998,7 @@ class CubbitAuthenticatedDownloader {
                     $modified_time = filemtime($folder);
                     if ($modified_time < $yesterday) {
                         $this->delete_directory($folder);
-                        $this->log_error("Cleaned up old download folder: " . basename($folder));
+                        $this->log("Cleaned up old download folder: " . basename($folder));
                     }
                 }
             }
@@ -971,7 +1009,7 @@ class CubbitAuthenticatedDownloader {
                 $modified_time = filemtime($zip_file);
                 if ($modified_time < $yesterday) {
                     unlink($zip_file);
-                    $this->log_error("Cleaned up old ZIP file: " . basename($zip_file));
+                    $this->log("Cleaned up old ZIP file: " . basename($zip_file));
                 }
             }
         }
@@ -1014,10 +1052,17 @@ class CubbitAuthenticatedDownloader {
     }
     
     /**
+     * Log messages
+     */
+    private function log($message) {
+        error_log('[' . date('Y-m-d H:i:s') . '] ' . $message . "\n", 3, $this->log_file);
+    }
+
+    /**
      * Log error messages
      */
     private function log_error($message) {
-        error_log('[' . date('Y-m-d H:i:s') . '] ' . $message . "\n", 3, $this->log_file);
+        $this->log("ERROR: " . $message);
     }
 }
 
@@ -1036,11 +1081,11 @@ function cubbit_auth_downloader_activate() {
     
     // Create directories if they don't exist
     if (!is_dir($css_dir)) {
-        mkdir($css_dir, 0755, true);
+        wp_mkdir_p($css_dir);
     }
     
     if (!is_dir($js_dir)) {
-        mkdir($js_dir, 0755, true);
+        wp_mkdir_p($js_dir);
     }
     
     // Create default CSS file if it doesn't exist
@@ -1435,7 +1480,7 @@ function enqueue_direct_download_script() {
             'cubbit-direct-download', 
             plugin_dir_url(__FILE__) . 'js/direct-download.js', 
             array('jquery'), 
-            '1.0', 
+            '1.1',
             true
         );
     }
