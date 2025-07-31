@@ -28,7 +28,9 @@ class AevovOnboardingSystem {
         'aevov-music-forge/aevov-music-forge.php' => 'Aevov Music Forge',
         'aevov-simulation-engine/aevov-simulation-engine.php' => 'Aevov Simulation Engine',
         'aevov-application-forge/aevov-application-forge.php' => 'Aevov Application Forge',
-        'aevov-super-app-forge/aevov-super-app-forge.php' => 'Aevov Super-App Forge'
+        'aevov-super-app-forge/aevov-super-app-forge.php' => 'Aevov Super-App Forge',
+        'aevov-language-engine/aevov-language-engine.php' => 'Aevov Language Engine',
+        'aevov-chunk-registry/aevov-chunk-registry.php' => 'Aevov Chunk Registry'
     ];
     
     private $onboarding_steps = [
