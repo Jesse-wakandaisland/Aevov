@@ -17,27 +17,24 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AevovMemoryCore {
 
+    private $admin_page_hook_suffix;
+
     public function __construct() {
         add_action( 'plugins_loaded', [ $this, 'init' ] );
+        register_activation_hook( __FILE__, [ $this, 'activate' ] );
     }
-
-    public function init() {
-        $this->include_dependencies();
-    }
-
-    private function include_dependencies() {
-        require_once plugin_dir_path( __FILE__ ) . 'includes/class-memory-pattern.php';
-        require_once plugin_dir_path( __FILE__ ) . 'includes/class-memory-manager.php';
-        require_once plugin_dir_path( __FILE__ ) . 'includes/api/class-memory-endpoint.php';
-    }
-
-    private $admin_page_hook_suffix;
 
     public function init() {
         $this->include_dependencies();
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
         new \AevovMemoryCore\API\MemoryEndpoint();
+    }
+
+    private function include_dependencies() {
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-memory-pattern.php';
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-memory-manager.php';
+        require_once plugin_dir_path( __FILE__ ) . 'includes/api/class-memory-endpoint.php';
     }
 
     public function add_admin_menu() {
@@ -68,6 +65,29 @@ class AevovMemoryCore {
 
     public function render_admin_page() {
         include plugin_dir_path( __FILE__ ) . 'templates/admin-page.php';
+    }
+
+    public function activate() {
+        $this->create_memory_data_table();
+    }
+
+    private function create_memory_data_table() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'aevov_memory_data';
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            address varchar(255) NOT NULL,
+            data longtext NOT NULL,
+            created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            updated_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY address (address)
+        ) $charset_collate;";
+
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
     }
 }
 

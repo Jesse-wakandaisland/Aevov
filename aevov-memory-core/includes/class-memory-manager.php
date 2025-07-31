@@ -4,31 +4,40 @@ namespace AevovMemoryCore;
 
 class MemoryManager {
 
+    private $table_name;
+
     public function __construct() {
-        // We will add our hooks and filters here.
+        global $wpdb;
+        $this->table_name = $wpdb->prefix . 'aevov_memory_data';
     }
 
     public function read_from_memory( $address ) {
-        // This is a placeholder.
-        // In a real implementation, this would read data from the memory system.
-        return 'data from address ' . $address;
+        global $wpdb;
+        $data = $wpdb->get_var( $wpdb->prepare( "SELECT data FROM $this->table_name WHERE address = %s", $address ) );
+        return $data ? json_decode( $data, true ) : null;
     }
 
     public function write_to_memory( $address, $data ) {
-        // This is a placeholder.
-        // In a real implementation, this would write data to the memory system.
+        global $wpdb;
+        $wpdb->replace(
+            $this->table_name,
+            [
+                'address' => $address,
+                'data' => json_encode( $data ),
+                'created_at' => current_time( 'mysql' ),
+                'updated_at' => current_time( 'mysql' ),
+            ]
+        );
         return true;
     }
 
     public function send_calcium_signal( $target, $payload ) {
-        // This is a placeholder.
-        // In a real implementation, this would send a calcium-like signal.
+        do_action( 'aevov_calcium_signal', $target, $payload );
         return true;
     }
 
     public function send_gliotransmitter_signal( $target, $payload ) {
-        // This is a placeholder.
-        // In a real implementation, this would send a gliotransmitter-like signal.
-        return true;
+        $response = apply_filters( 'aevov_gliotransmitter_signal', null, $target, $payload );
+        return $response;
     }
 }
