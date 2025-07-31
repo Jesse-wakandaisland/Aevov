@@ -31,7 +31,8 @@ class AevovOnboardingSystem {
         'aevov-super-app-forge/aevov-super-app-forge.php' => 'Aevov Super-App Forge',
         'aevov-language-engine/aevov-language-engine.php' => 'Aevov Language Engine',
         'aevov-chunk-registry/aevov-chunk-registry.php' => 'Aevov Chunk Registry',
-        'aevov-neuro-architect/aevov-neuro-architect.php' => 'Aevov Neuro-Architect'
+        'aevov-neuro-architect/aevov-neuro-architect.php' => 'Aevov Neuro-Architect',
+        'aevov-playground/aevov-playground.php' => 'Aevov Playground'
     ];
     
     private $onboarding_steps = [
