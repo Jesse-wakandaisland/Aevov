@@ -4,7 +4,7 @@ Plugin Name: Aevov Neuro-Architect
 Plugin URI:
 Description: A neuro-architect that can compose new models from a library of fundamental neural patterns.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-neuro-architect
