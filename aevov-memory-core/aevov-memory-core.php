@@ -4,7 +4,7 @@ Plugin Name: Aevov Memory Core
 Plugin URI:
 Description: A dynamic, biologically-inspired memory system for the Aevov network.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-memory-core
