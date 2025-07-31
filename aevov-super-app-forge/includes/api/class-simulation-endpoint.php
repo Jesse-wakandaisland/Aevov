@@ -19,9 +19,21 @@ class SimulationEndpoint {
     }
 
     public function simulate_generation( $request ) {
-        $uad = $request->get_param( 'uad' );
-        $weaver = new SuperAppWeaver();
-        $ticks = $weaver->simulate_generation( $uad );
-        return new \WP_REST_Response( $ticks );
+        $url = $request->get_param( 'url' );
+        if ( empty( $url ) ) {
+            return new \WP_REST_Response( [ 'error' => 'URL is required.' ], 400 );
+        }
+
+        $ingestion_engine = new \AevovSuperAppForge\AppIngestionEngine();
+        $uad = $ingestion_engine->ingest_app( $url );
+
+        if ( isset( $uad['error'] ) ) {
+            return new \WP_REST_Response( $uad, 400 );
+        }
+
+        $weaver = new \AevovSuperAppForge\SuperAppWeaver();
+        $events = $weaver->simulate_generation( $uad );
+
+        return new \WP_REST_Response( $events );
     }
 }

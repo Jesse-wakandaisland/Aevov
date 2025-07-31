@@ -2,7 +2,8 @@
 
 namespace AevovSuperAppForge\API;
 
-use AevovSuperAppForge\JobManager;
+use AevovSuperAppForge\AppIngestionEngine;
+use AevovSuperAppForge\SuperAppWeaver;
 
 class ApplicationEndpoint {
 
@@ -11,35 +12,33 @@ class ApplicationEndpoint {
     }
 
     public function register_routes() {
-        register_rest_route( 'aevov-super-app/v1', '/spawn', [
+        register_rest_route( 'aevov-super-app/v1', '/weave', [
             'methods'             => 'POST',
-            'callback'            => [ $this, 'spawn_application' ],
-            'permission_callback' => '__return_true',
-        ] );
-
-        register_rest_route( 'aevov-super-app/v1', '/evolve/(?P<job_id>[a-zA-Z0-9-]+)', [
-            'methods'             => 'POST',
-            'callback'            => [ $this, 'evolve_application' ],
+            'callback'            => [ $this, 'weave_application' ],
             'permission_callback' => '__return_true',
         ] );
     }
 
-    public function spawn_application( $request ) {
-        $params = $request->get_params();
-        $job_manager = new JobManager();
-        $job_id = $job_manager->create_job( $params );
+    public function weave_application( $request ) {
+        $url = $request->get_param( 'url' );
+        if ( empty( $url ) ) {
+            return new \WP_REST_Response( [ 'error' => 'URL is required.' ], 400 );
+        }
 
-        // This is where we would trigger the backend worker process.
-        // For now, I'll just return the job ID and a dummy WebSocket URL.
-        return new \WP_REST_Response( [ 'job_id' => $job_id, 'websocket_url' => 'ws://localhost:8080' ] );
-    }
+        $ingestion_engine = new AppIngestionEngine();
+        $uad = $ingestion_engine->ingest_app( $url );
 
-    public function evolve_application( $request ) {
-        $job_id = $request['job_id'];
-        $params = $request->get_params();
+        if ( isset( $uad['error'] ) ) {
+            return new \WP_REST_Response( $uad, 400 );
+        }
 
-        // This is where we would send the evolution request to the backend worker.
-        // For now, I'll just return a success message.
-        return new \WP_REST_Response( [ 'status' => 'evolution_received' ] );
+        $weaver = new SuperAppWeaver();
+        $result = $weaver->weave_app( $uad );
+
+        if ( isset( $result['error'] ) ) {
+            return new \WP_REST_Response( $result, 500 );
+        }
+
+        return new \WP_REST_Response( $result );
     }
 }

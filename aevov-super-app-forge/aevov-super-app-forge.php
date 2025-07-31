@@ -27,6 +27,7 @@ class AevovSuperAppForge {
 
     private function include_dependencies() {
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-app-ingestion-engine.php';
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-uad-to-tensor-converter.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-super-app-weaver.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-job-manager.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-websocket-server.php';
