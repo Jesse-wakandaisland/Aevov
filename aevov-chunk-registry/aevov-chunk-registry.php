@@ -4,7 +4,7 @@ Plugin Name: Aevov Chunk Registry
 Plugin URI:
 Description: A central registry for all Aevov chunks.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-chunk-registry
