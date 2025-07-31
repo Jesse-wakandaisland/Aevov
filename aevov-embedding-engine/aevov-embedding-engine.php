@@ -4,7 +4,7 @@ Plugin Name: Aevov Embedding Engine
 Plugin URI:
 Description: A service for converting text, images, and other data into embeddings.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-embedding-engine
