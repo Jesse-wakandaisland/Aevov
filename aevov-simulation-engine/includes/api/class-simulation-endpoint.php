@@ -35,6 +35,12 @@ class SimulationEndpoint {
             'callback'            => [ $this, 'visualize_model' ],
             'permission_callback' => '__return_true',
         ] );
+
+        register_rest_route( 'aevov-sim/v1', '/visualize-memory', [
+            'methods'             => 'POST',
+            'callback'            => [ $this, 'visualize_memory' ],
+            'permission_callback' => '__return_true',
+        ] );
     }
 
     public function start_simulation( $request ) {
@@ -67,6 +73,13 @@ class SimulationEndpoint {
         $model = $request->get_param( 'model' );
         $engine = new \AevovSimulationEngine\AevovSimulationEngine();
         $visualization = $engine->render_virtual_brain( $model );
+        return new \WP_REST_Response( [ 'visualization' => $visualization ] );
+    }
+
+    public function visualize_memory( $request ) {
+        $memory_system = $request->get_param( 'memory_system' );
+        $engine = new \AevovSimulationEngine\AevovSimulationEngine();
+        $visualization = $engine->render_virtual_hippocampus( $memory_system );
         return new \WP_REST_Response( [ 'visualization' => $visualization ] );
     }
 }

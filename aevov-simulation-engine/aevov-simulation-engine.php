@@ -80,6 +80,13 @@ class AevovSimulationEngine {
         return '<pre>' . print_r( $model, true ) . '</pre>';
     }
 
+    public function render_virtual_hippocampus( $memory_system ) {
+        // This is a placeholder.
+        // In a real implementation, this would render a 3D visualization
+        // of the memory system.
+        return '<pre>' . print_r( $memory_system, true ) . '</pre>';
+    }
+
     private function include_dependencies() {
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-simulation-weaver.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-job-manager.php';

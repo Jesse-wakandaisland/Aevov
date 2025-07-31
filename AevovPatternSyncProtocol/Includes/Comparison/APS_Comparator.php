@@ -124,7 +124,20 @@ class APS_Comparator {
     public function compose_model( $blueprint ) {
         $patterns = $this->select_patterns( $blueprint );
         $model = $this->assemble_model( $patterns );
+        if ( isset( $blueprint['memory'] ) ) {
+            $model['memory_system'] = $this->compose_memory_system( $blueprint['memory'] );
+        }
         return $model;
+    }
+
+    private function compose_memory_system( $memory_blueprint ) {
+        // This is a placeholder.
+        // In a real implementation, this would use the Aevov network's logic
+        // to compose a memory system from the blueprint.
+        return [
+            'memory_id' => 'composed-memory-' . uniqid(),
+            'blueprint' => $memory_blueprint,
+        ];
     }
 
     private function select_patterns( $blueprint ) {

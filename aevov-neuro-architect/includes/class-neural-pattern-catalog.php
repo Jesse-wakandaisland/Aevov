@@ -25,6 +25,23 @@ class NeuralPatternCatalog {
         );
     }
 
+    public function get_memory_patterns( $type ) {
+        global $wpdb;
+        $patterns = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $this->table_name WHERE pattern_type = %s", $type ) );
+        $memory_patterns = [];
+        foreach ( $patterns as $pattern ) {
+            $metadata = json_decode( $pattern->metadata, true );
+            $memory_patterns[] = new \AevovMemoryCore\MemoryPattern(
+                $pattern->pattern_id,
+                $pattern->pattern_type,
+                $metadata['capacity'],
+                $metadata['decay_rate'],
+                $metadata
+            );
+        }
+        return $memory_patterns;
+    }
+
     public function get_pattern( $pattern_id ) {
         global $wpdb;
         $pattern = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM $this->table_name WHERE pattern_id = %s", $pattern_id ) );
