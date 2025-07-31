@@ -4,7 +4,7 @@ Plugin Name: Aevov Transcription Engine
 Plugin URI:
 Description: A state-of-the-art speech-to-text engine for the Aevov network.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-transcription-engine
