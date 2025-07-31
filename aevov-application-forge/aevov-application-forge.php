@@ -4,7 +4,7 @@ Plugin Name: Aevov Application Forge
 Plugin URI:
 Description: Real-time application generation and streaming for the Aevov network.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-application-forge
