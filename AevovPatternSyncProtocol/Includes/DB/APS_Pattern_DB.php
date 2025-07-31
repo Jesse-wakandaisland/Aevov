@@ -36,7 +36,8 @@ class APS_Pattern_DB {
             PRIMARY KEY  (id),
             UNIQUE KEY pattern_hash (pattern_hash),
             KEY pattern_type (pattern_type),
-            KEY sync_status (sync_status)
+            KEY sync_status (sync_status),
+            cubbit_key varchar(255) DEFAULT NULL
         ) $charset_collate;";
     
         dbDelta($sql);
@@ -103,16 +104,42 @@ class APS_Pattern_DB {
     }
 
     public function insert_pattern($pattern_data) {
+        // Upload to Cubbit
+        $cubbit_key = $this->upload_to_cubbit($pattern_data);
+
         return $this->wpdb->insert(
             $this->table_name,
             [
                 'pattern_hash' => $pattern_data['hash'],
                 'pattern_type' => $pattern_data['type'],
                 'pattern_data' => json_encode($pattern_data['data']),
-                'confidence' => $pattern_data['confidence']
+                'confidence' => $pattern_data['confidence'],
+                'cubbit_key' => $cubbit_key
             ],
-            ['%s', '%s', '%s', '%f']
+            ['%s', '%s', '%s', '%f', '%s']
         );
+    }
+
+    private function upload_to_cubbit($pattern_data) {
+        if (!class_exists('CubbitDirectoryManager')) {
+            // This is a bit of a hack, but it's the only way to ensure the class is available.
+            $cubbit_plugin_path = WP_PLUGIN_DIR . '/Cubbit DS3/Cubbit Directory Manager Extension/cubbit-directory-manager-extension.php';
+            if (file_exists($cubbit_plugin_path)) {
+                require_once($cubbit_plugin_path);
+            } else {
+                return null;
+            }
+        }
+
+        $cubbit_manager = new \CubbitDirectoryManager();
+        $temp_dir = get_temp_dir();
+        $temp_file = wp_tempnam('pattern', $temp_dir);
+        file_put_contents($temp_file, json_encode($pattern_data['data']));
+        $cubbit_key = 'patterns/' . $pattern_data['hash'] . '.json';
+        $upload_result = $cubbit_manager->upload_file($temp_file, $cubbit_key, 'application/json', 'private');
+        unlink($temp_file);
+
+        return $upload_result ? $cubbit_key : null;
     }
 
     public function update_pattern($pattern_hash, $pattern_data) {

@@ -64,7 +64,7 @@
         },
 
         viewPattern: function(id) {
-            window.location.href = 'admin.php?page=aps-analysis&id=' + id;
+            window.location.href = 'admin.php?page=aevov-view-pattern&id=' + id;
         },
 
         analyzePattern: function(id) {
