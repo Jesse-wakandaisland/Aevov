@@ -22,7 +22,8 @@ class AevovOnboardingSystem {
         'AevovPatternSyncProtocol/aevov-pattern-sync-protocol.php' => 'Aevov Pattern Sync Protocol',
         'bloom-chunk-scanner/bloom-chunk-scanner.php' => 'BLOOM Chunk Scanner',
         'APS Chunk Uploader/chunk-uploader.php' => 'APS Chunk Uploader',
-        'aevov-cubbit-cdn/aevov-cubbit-cdn.php' => 'Aevov Cubbit CDN'
+        'aevov-cubbit-cdn/aevov-cubbit-cdn.php' => 'Aevov Cubbit CDN',
+        'aevov-stream/aevov-stream.php' => 'Aevov Stream'
     ];
     
     private $onboarding_steps = [
