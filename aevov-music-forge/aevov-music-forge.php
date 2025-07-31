@@ -4,7 +4,7 @@ Plugin Name: Aevov Music Forge
 Plugin URI:
 Description: Sophisticated music generation for the Aevov network.
 Version: 1.0.0
-Author: Jules
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: aevov-music-forge
