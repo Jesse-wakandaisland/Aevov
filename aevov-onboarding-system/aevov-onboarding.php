@@ -24,7 +24,8 @@ class AevovOnboardingSystem {
         'APS Chunk Uploader/chunk-uploader.php' => 'APS Chunk Uploader',
         'aevov-cubbit-cdn/aevov-cubbit-cdn.php' => 'Aevov Cubbit CDN',
         'aevov-stream/aevov-stream.php' => 'Aevov Stream',
-        'aevov-image-engine/aevov-image-engine.php' => 'Aevov Image Engine'
+        'aevov-image-engine/aevov-image-engine.php' => 'Aevov Image Engine',
+        'aevov-music-forge/aevov-music-forge.php' => 'Aevov Music Forge'
     ];
     
     private $onboarding_steps = [
