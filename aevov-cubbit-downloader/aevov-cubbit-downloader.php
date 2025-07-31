@@ -4,7 +4,7 @@ Plugin Name: Aevov Cubbit Downloader
 Plugin URI:
 Description: Integrates the Cubbit Authenticated Downloader with the Aevov Pattern Sync Protocol.
 Version: 1.1.0
-Author: Your Name/Company
+Author: Aevov
 Author URI:
 License: GPL2
 Text Domain: acd
