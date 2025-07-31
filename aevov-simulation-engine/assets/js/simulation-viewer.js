@@ -52,7 +52,9 @@
       // Clear the canvas.
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Render the entities.
+      // This is a placeholder for the 3D visualization.
+      // In a real implementation, this would use a library like Three.js
+      // to render the simulation.
       data.entities.forEach(function (entity) {
         if (entity.type === 'agent') {
           ctx.fillStyle = 'blue';

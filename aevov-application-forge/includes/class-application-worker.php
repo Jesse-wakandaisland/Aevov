@@ -17,15 +17,13 @@ class ApplicationWorker {
         $weaver = new ApplicationWeaver();
         $state = $weaver->get_genesis_state( $job['params'] );
 
+        $websocket_server = new WebSocketServer();
+
         while ( true ) {
-            // Process user interactions.
-            // ...
+            // This is a placeholder for the application logic.
+            // In a real implementation, this would be much more complex.
 
-            // Apply Aevov rules to update the application state.
-            // ...
-
-            // Send the updated state to the WebSocket server.
-            // ...
+            $websocket_server->broadcast( json_encode( $state ) );
 
             // Generate music and images.
             do_action( 'aevov_application_tick', $state );

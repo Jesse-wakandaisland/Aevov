@@ -3,6 +3,7 @@
 
   var Playground = {
     init: function () {
+      var self = this;
       $('.draggable-block').draggable({
         helper: 'clone',
         revert: 'invalid'
@@ -14,83 +15,44 @@
           block.removeClass('draggable-block');
           block.addClass('playground-block');
           $(this).append(block);
+          self.addEndpoints(block);
         }
       });
 
-      $('#generate-app').on('click', function () {
-        var blocks = [];
-        $('.playground-block').each(function () {
-          blocks.push($(this).data('engine'));
-        });
+      $('#playground-canvas').on('click', '.endpoint', function (e) {
+        self.handleEndpointClick($(this));
+      });
+    },
 
-        $.ajax({
-          url: '/wp-json/aevov-sim/v1/visualize',
-          method: 'POST',
-          data: {
-            model: {
-              blocks: blocks
-            }
-          }
-        }).done(function (response) {
-          if (response.visualization) {
-            $('#playground-canvas').html(response.visualization);
-          } else {
-            alert('Error generating visualization.');
-          }
-        }).fail(function () {
-          alert('Error generating visualization.');
-        });
+    addEndpoints: function (block) {
+      block.append('<div class="endpoint input"></div>');
+      block.append('<div class="endpoint output"></div>');
+    },
+
+    handleEndpointClick: function (endpoint) {
+      if (this.selectedEndpoint) {
+        this.connectEndpoints(this.selectedEndpoint, endpoint);
+        this.selectedEndpoint.removeClass('selected');
+        this.selectedEndpoint = null;
+      } else {
+        endpoint.addClass('selected');
+        this.selectedEndpoint = endpoint;
+      }
+    },
+
+    connectEndpoints: function (start, end) {
+      var startPos = start.offset();
+      var endPos = end.offset();
+      var canvasPos = $('#playground-canvas').offset();
+
+      var line = $('<div class="connection-line"></div>');
+      line.css({
+        top: startPos.top - canvasPos.top + 5,
+        left: startPos.left - canvasPos.left + 5,
+        width: endPos.left - startPos.left
       });
 
-      $('#spawn-as-application').on('click', function () {
-        var blocks = [];
-        $('.playground-block').each(function () {
-          blocks.push($(this).data('engine'));
-        });
-
-        $.ajax({
-          url: '/wp-json/aevov-app/v1/spawn',
-          method: 'POST',
-          data: {
-            workflow: {
-              blocks: blocks
-            }
-          }
-        }).done(function (response) {
-          if (response.job_id) {
-            alert('Application spawning with job ID: ' + response.job_id);
-          } else {
-            alert('Error spawning application.');
-          }
-        }).fail(function () {
-          alert('Error spawning application.');
-        });
-      });
-
-      $('#save-as-pattern').on('click', function () {
-        var blocks = [];
-        $('.playground-block').each(function () {
-          blocks.push($(this).data('engine'));
-        });
-
-        $.ajax({
-          url: '/wp-json/aevov-playground/v1/save-pattern',
-          method: 'POST',
-          data: {
-            workflow: {
-              blocks: blocks
-            }
-          }
-        }).done(function (response) {
-          if (response.pattern_id) {
-            alert('Pattern saved with ID: ' + response.pattern_id);
-          } else {
-            alert('Error saving pattern.');
-          }
-        }).fail(function () {
-          alert('Error saving pattern.');
-        });
-      });
+      $('#playground-canvas').append(line);
     }
   };
 

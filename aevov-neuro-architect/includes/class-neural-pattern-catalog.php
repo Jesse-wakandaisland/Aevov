@@ -50,4 +50,10 @@ class NeuralPatternCatalog {
         }
         return $pattern;
     }
+
+    public function get_patterns_by_type( $type ) {
+        global $wpdb;
+        $patterns = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM $this->table_name WHERE pattern_type = %s", $type ) );
+        return $patterns;
+    }
 }

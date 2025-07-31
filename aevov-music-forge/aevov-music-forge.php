@@ -28,7 +28,34 @@ class AevovMusicForge {
         add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
         add_action( 'admin_init', [ $this, 'register_settings' ] );
+        register_activation_hook( __FILE__, [ $this, 'activate' ] );
         new \AevovMusicForge\API\MusicEndpoint();
+    }
+
+    public function activate() {
+        $this->create_music_jobs_table();
+    }
+
+    private function create_music_jobs_table() {
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'aevov_music_jobs';
+        $charset_collate = $wpdb->get_charset_collate();
+
+        $sql = "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            job_id varchar(255) NOT NULL,
+            user_id bigint(20) NOT NULL,
+            params text NOT NULL,
+            status varchar(255) NOT NULL,
+            track_url varchar(255) NOT NULL,
+            created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            updated_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
+            PRIMARY KEY  (id),
+            UNIQUE KEY job_id (job_id)
+        ) $charset_collate;";
+
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+        dbDelta( $sql );
     }
 
     public function register_settings() {
@@ -76,7 +103,30 @@ class AevovMusicForge {
     private function include_dependencies() {
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-music-weaver.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/class-job-manager.php';
+        require_once plugin_dir_path( __FILE__ ) . 'includes/class-music-worker.php';
         require_once plugin_dir_path( __FILE__ ) . 'includes/api/class-music-endpoint.php';
+    }
+
+    public function init() {
+        $this->include_dependencies();
+        add_action( 'admin_menu', [ $this, 'add_admin_menu' ] );
+        add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_scripts' ] );
+        add_action( 'admin_init', [ $this, 'register_settings' ] );
+        register_activation_hook( __FILE__, [ $this, 'activate' ] );
+        add_action( 'aevov_music_forge_cron', [ $this, 'run_worker' ] );
+        new \AevovMusicForge\API\MusicEndpoint();
+    }
+
+    public function activate() {
+        $this->create_music_jobs_table();
+        if ( ! wp_next_scheduled( 'aevov_music_forge_cron' ) ) {
+            wp_schedule_event( time(), 'hourly', 'aevov_music_forge_cron' );
+        }
+    }
+
+    public function run_worker() {
+        $worker = new \AevovMusicForge\MusicWorker();
+        $worker->run();
     }
 }
 

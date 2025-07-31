@@ -14,4 +14,9 @@ class WebSocketServer {
         // In a real implementation, this would broadcast data to all
         // connected clients.
     }
+
+    public function run() {
+        // This is a placeholder.
+        // In a real implementation, this would run the WebSocket server.
+    }
 }

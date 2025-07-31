@@ -141,10 +141,12 @@ class APS_Comparator {
     }
 
     private function select_patterns( $blueprint ) {
-        // This is a placeholder.
-        // In a real implementation, this would use the Aevov network's logic
-        // to select the best patterns for the blueprint.
-        return [];
+        $catalog = new \AevovNeuroArchitect\NeuralPatternCatalog();
+        $patterns = [];
+        foreach ( $blueprint['layers'] as $layer ) {
+            $patterns = array_merge( $patterns, $catalog->get_patterns_by_type( $layer['type'] ) );
+        }
+        return $patterns;
     }
 
     private function assemble_model( $patterns ) {
