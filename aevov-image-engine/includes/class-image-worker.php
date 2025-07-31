@@ -27,14 +27,51 @@ class ImageWorker {
         $job_manager = new JobManager();
         $job_manager->update_job( $job->job_id, [ 'status' => 'processing' ] );
 
-        // This is a placeholder for the image generation logic.
-        // In a real implementation, this would use the Aevov network's logic
-        // to render, upscale, and apply style transfer to the image.
-        $image_url = 'https://via.placeholder.com/150';
+        // Simulate the image generation process.
+        $image_data = $this->generate_image($job->params);
+        $image_url = $this->save_image($image_data);
 
         $job_manager->update_job( $job->job_id, [
             'status' => 'complete',
             'image_url' => $image_url,
         ] );
+    }
+
+    private function generate_image($params) {
+        $width = isset($params['width']) ? $params['width'] : 512;
+        $height = isset($params['height']) ? $params['height'] : 512;
+        $text = isset($params['text']) ? $params['text'] : 'Aevov Image';
+
+        // Create a blank image
+        $image = imagecreatetruecolor($width, $height);
+
+        // Allocate colors
+        $bg_color = imagecolorallocate($image, 240, 240, 240);
+        $text_color = imagecolorallocate($image, 50, 50, 50);
+
+        // Fill the background
+        imagefill($image, 0, 0, $bg_color);
+
+        // Add the text
+        $font_size = 5;
+        $text_width = imagefontwidth($font_size) * strlen($text);
+        $text_height = imagefontheight($font_size);
+        $x = ($width - $text_width) / 2;
+        $y = ($height - $text_height) / 2;
+        imagestring($image, $font_size, $x, $y, $text, $text_color);
+
+        return $image;
+    }
+
+    private function save_image($image) {
+        $upload_dir = wp_upload_dir();
+        $filename = 'aevov-image-' . uniqid() . '.png';
+        $filepath = $upload_dir['path'] . '/' . $filename;
+        $fileurl = $upload_dir['url'] . '/' . $filename;
+
+        imagepng($image, $filepath);
+        imagedestroy($image);
+
+        return $fileurl;
     }
 }

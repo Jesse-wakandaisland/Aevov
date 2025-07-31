@@ -15,6 +15,9 @@ class MetricsCollector {
     private function init_metrics_collection() {
         // Initialize metrics collection hooks
         add_action('bloom_collect_metrics', [$this, 'collect_system_metrics']);
+        add_action('http_api_debug', [$this, 'track_external_requests'], 10, 5);
+        add_action('rest_api_init', [$this, 'track_api_calls']);
+        set_error_handler([$this, 'error_handler']);
     }
 
     /**
@@ -190,18 +193,44 @@ class MetricsCollector {
      * Count external requests (placeholder)
      * @return int Number of external requests
      */
+    public function track_external_requests($response, $type, $class, $args, $url) {
+        $requests = get_transient('bloom_external_requests') ?: [];
+        $requests[] = [
+            'url' => $url,
+            'timestamp' => time()
+        ];
+        set_transient('bloom_external_requests', $requests, HOUR_IN_SECONDS);
+    }
+
     private function count_external_requests() {
-        // This would need to be implemented with request tracking
-        return 0;
+        $requests = get_transient('bloom_external_requests') ?: [];
+        // Filter requests from the last hour
+        $recent_requests = array_filter($requests, function($req) {
+            return (time() - $req['timestamp']) < HOUR_IN_SECONDS;
+        });
+        return count($recent_requests);
     }
 
     /**
      * Count API calls (placeholder)
      * @return int Number of API calls
      */
+    public function track_api_calls() {
+        $requests = get_transient('bloom_api_calls') ?: [];
+        $requests[] = [
+            'route' => $_SERVER['REQUEST_URI'],
+            'timestamp' => time()
+        ];
+        set_transient('bloom_api_calls', $requests, HOUR_IN_SECONDS);
+    }
+
     private function count_api_calls() {
-        // This would need to be implemented with API call tracking
-        return 0;
+        $requests = get_transient('bloom_api_calls') ?: [];
+        // Filter requests from the last hour
+        $recent_requests = array_filter($requests, function($req) {
+            return (time() - $req['timestamp']) < HOUR_IN_SECONDS;
+        });
+        return count($recent_requests);
     }
 
     /**
@@ -228,9 +257,26 @@ class MetricsCollector {
      * Count PHP errors (placeholder)
      * @return int Number of PHP errors
      */
+    public function error_handler($errno, $errstr, $errfile, $errline) {
+        $errors = get_transient('bloom_php_errors') ?: [];
+        $errors[] = [
+            'errno' => $errno,
+            'errstr' => $errstr,
+            'errfile' => $errfile,
+            'errline' => $errline,
+            'timestamp' => time()
+        ];
+        set_transient('bloom_php_errors', $errors, HOUR_IN_SECONDS);
+        return false; // Let the default error handler run
+    }
+
     private function count_php_errors() {
-        // This would need error log parsing
-        return 0;
+        $errors = get_transient('bloom_php_errors') ?: [];
+        // Filter errors from the last hour
+        $recent_errors = array_filter($errors, function($err) {
+            return (time() - $err['timestamp']) < HOUR_IN_SECONDS;
+        });
+        return count($recent_errors);
     }
 
     /**
@@ -238,8 +284,11 @@ class MetricsCollector {
      * @return int Number of WordPress errors
      */
     private function count_wordpress_errors() {
-        // This would need WordPress error tracking
-        return 0;
+        $errors = get_transient('bloom_php_errors') ?: [];
+        $wordpress_errors = array_filter($errors, function($err) {
+            return (time() - $err['timestamp']) < HOUR_IN_SECONDS && strpos($err['errfile'], ABSPATH . 'wp-admin') !== false || strpos($err['errfile'], ABSPATH . 'wp-includes') !== false;
+        });
+        return count($wordpress_errors);
     }
 
     /**
@@ -247,8 +296,11 @@ class MetricsCollector {
      * @return int Number of plugin errors
      */
     private function count_plugin_errors() {
-        // This would need plugin error tracking
-        return 0;
+        $errors = get_transient('bloom_php_errors') ?: [];
+        $plugin_errors = array_filter($errors, function($err) {
+            return (time() - $err['timestamp']) < HOUR_IN_SECONDS && strpos($err['errfile'], WP_PLUGIN_DIR) !== false;
+        });
+        return count($plugin_errors);
     }
 
     /**

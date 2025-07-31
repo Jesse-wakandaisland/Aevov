@@ -2,6 +2,14 @@
 
 namespace AevovLanguageEngineV2;
 
+use AevovEmbeddingEngine\EmbeddingManager;
+use AevovChunkRegistry\ChunkRegistry;
+use AevovChunkRegistry\AevovChunk;
+
+require_once dirname(__FILE__) . '/../../../aevov-embedding-engine/includes/class-embedding-manager.php';
+require_once dirname(__FILE__) . '/../../../aevov-chunk-registry/includes/class-chunk-registry.php';
+require_once dirname(__FILE__) . '/../../../aevov-chunk-registry/includes/class-aevov-chunk.php';
+
 class LanguageWeaver {
 
     public function __construct() {
@@ -17,20 +25,24 @@ class LanguageWeaver {
     }
 
     private function get_embedding( $prompt ) {
-        // This is a placeholder.
-        // In a real implementation, this would use the Aevov Embedding Engine
-        // to get an embedding for the prompt.
-        return [ 0.1, 0.2, 0.3, 0.4, 0.5 ];
+        $embedding_manager = new EmbeddingManager();
+        $embedding = $embedding_manager->embed($prompt);
+        return $embedding['metadata']['vector'];
     }
 
     private function find_similar_patterns( $embedding ) {
-        // This is a placeholder.
-        // In a real implementation, this would use the Aevov Chunk Registry
-        // to find patterns with similar embeddings.
-        return [
-            [ 'id' => 'pattern-1', 'cubbit_key' => 'llm/pattern-1.bin' ],
-            [ 'id' => 'pattern-2', 'cubbit_key' => 'llm/pattern-2.bin' ],
-            [ 'id' => 'pattern-3', 'cubbit_key' => 'llm/pattern-3.bin' ],
-        ];
+        $chunk_registry = new ChunkRegistry();
+        $chunk = new AevovChunk('temp-id', 'embedding', '', ['vector' => $embedding]);
+        $similar_chunks = $chunk_registry->find_similar_chunks($chunk);
+
+        $patterns = [];
+        foreach ($similar_chunks as $similar_chunk) {
+            $patterns[] = [
+                'id' => $similar_chunk->id,
+                'cubbit_key' => $similar_chunk->cubbit_key
+            ];
+        }
+
+        return $patterns;
     }
 }

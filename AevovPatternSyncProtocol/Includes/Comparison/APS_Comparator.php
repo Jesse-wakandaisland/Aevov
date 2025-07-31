@@ -7,6 +7,12 @@ namespace APS\Comparison;
 
 use APS\Analysis\SymbolicPatternAnalyzer;
 use BLOOM\Processing\TensorProcessor;
+use AevovChunkRegistry\ChunkRegistry;
+use AevovChunkRegistry\AevovChunk;
+
+require_once dirname(__FILE__) . '/../../../../aevov-chunk-registry/includes/class-chunk-registry.php';
+require_once dirname(__FILE__) . '/../../../../aevov-chunk-registry/includes/class-aevov-chunk.php';
+
 
 class APS_Comparator {
     private $symbolic_analyzer;
@@ -131,13 +137,33 @@ class APS_Comparator {
     }
 
     private function compose_memory_system( $memory_blueprint ) {
-        // This is a placeholder.
-        // In a real implementation, this would use the Aevov network's logic
-        // to compose a memory system from the blueprint.
-        return [
+        // This function simulates the composition of a memory system based on a blueprint.
+        // In a real implementation, this would involve a more complex interaction
+        // with the Aevov network's logic.
+        $memory_system = [
             'memory_id' => 'composed-memory-' . uniqid(),
             'blueprint' => $memory_blueprint,
+            'components' => [],
+            'capacity' => 0,
+            'access_policy' => 'default'
         ];
+
+        if (isset($memory_blueprint['components'])) {
+            foreach ($memory_blueprint['components'] as $component_blueprint) {
+                $memory_system['components'][] = [
+                    'component_id' => 'mem-component-' . uniqid(),
+                    'type' => $component_blueprint['type'],
+                    'capacity' => $component_blueprint['capacity']
+                ];
+                $memory_system['capacity'] += $component_blueprint['capacity'];
+            }
+        }
+
+        if (isset($memory_blueprint['access_policy'])) {
+            $memory_system['access_policy'] = $memory_blueprint['access_policy'];
+        }
+
+        return $memory_system;
     }
 
     private function select_patterns( $blueprint ) {
@@ -150,12 +176,32 @@ class APS_Comparator {
     }
 
     private function assemble_model( $patterns ) {
-        // This is a placeholder.
-        // In a real implementation, this would assemble the patterns into a new model.
-        return [
+        // This function assembles a new model from a collection of patterns.
+        // It combines the features, symbols, and rules from all patterns
+        // into a single, unified model.
+        $model = [
             'model_id' => 'composed-model-' . uniqid(),
-            'patterns' => $patterns,
+            'patterns' => array_column($patterns, 'id'),
+            'combined_features' => [],
+            'combined_symbols' => [],
+            'combined_rules' => [],
+            'confidence' => 0
         ];
+
+        $total_confidence = 0;
+        foreach ($patterns as $pattern) {
+            $model['combined_features'] = array_merge($model['combined_features'], $pattern['features']);
+            $model['combined_symbols'] = array_merge($model['combined_symbols'], $pattern['symbols']);
+            $model['combined_rules'] = array_merge($model['combined_rules'], $pattern['rules']);
+            $total_confidence += $pattern['confidence'];
+        }
+
+        // Average the confidence of the combined patterns
+        if (count($patterns) > 0) {
+            $model['confidence'] = $total_confidence / count($patterns);
+        }
+
+        return $model;
     }
 
     public function find_analogous_patterns( $pattern ) {
@@ -164,10 +210,9 @@ class APS_Comparator {
     }
 
     private function query_chunk_registry( $pattern ) {
-        // This is a placeholder.
-        // In a real implementation, this would query the Aevov Chunk Registry
-        // to find semantically similar patterns.
-        return [];
+        $chunk_registry = new ChunkRegistry();
+        $chunk = new AevovChunk($pattern['id'], $pattern['type'], '', $pattern['features']);
+        return $chunk_registry->find_similar_chunks($chunk);
     }
 
     public function store_comparison_result($result) {

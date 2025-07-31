@@ -9,16 +9,19 @@ class EmbeddingManager {
     }
 
     public function embed( $data ) {
-        // This is a placeholder.
-        // In a real implementation, this would use an embedding model
-        // to convert the data into an embedding.
+        $vector = [];
+        $hash = md5(serialize($data));
+        for ($i = 0; $i < 16; $i++) {
+            $vector[] = hexdec(substr($hash, $i * 2, 2)) / 255.0;
+        }
+
         return [
             'id' => 'embedding-' . uniqid(),
             'type' => 'embedding',
             'cubbit_key' => 'embeddings/embedding-' . uniqid() . '.bin',
             'metadata' => [
-                'vector' => [ 0.1, 0.2, 0.3, 0.4, 0.5 ],
-                'dimensions' => 5,
+                'vector' => $vector,
+                'dimensions' => count($vector),
             ],
             'dependencies' => [],
         ];
